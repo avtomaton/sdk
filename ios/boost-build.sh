@@ -1,11 +1,10 @@
-#! /bin/bash
+#!/bin/bash
 #
 #===============================================================================
-# Filename:  build-libc++.sh
+# Filename:  boost-build.sh
 # Author:    Pete Goodliffe, Daniel Rosser, Viktor Pogrebniak
 # Copyright: (c) Copyright 2009 Pete Goodliffe, 2013-2015 Daniel Rosser, 2016 Viktor Pogrebniak
 # License:   Please feel free to use this, with attribution
-# Modified version ## for ofxiOSBoost
 #===============================================================================
 #
 # Builds a Boost framework for the iPhone.
