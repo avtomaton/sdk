@@ -27,7 +27,7 @@ COMPILER=clang++
 PARALLEL_MAKE=16   # how many threads to make boost with
 
 BOOST_VERSION=1.60.0
-BOOST_VERSION2=1_60_0
+BOOST_VERSION2=${BOOST_VERSION//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
