@@ -348,8 +348,8 @@ if [ -z ${BITCODE} ]; then
 else 
     echo "BITCODE EMBEDDED: YES with: $BITCODE"
 fi
-#downloadBoost
-#unpackBoost
+downloadBoost
+unpackBoost
 inventMissingHeaders
 prepare
 bootstrapBoost
