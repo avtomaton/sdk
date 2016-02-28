@@ -21,17 +21,13 @@
 # same directory as this script, and run "./boost.sh". Grab a cuppa. And voila.
 #===============================================================================
 
-here="`dirname \"$0\"`"
-echo "entering to $here"
-cd "$here" || exit 1
-
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
 COMPILER=clang++
 PARALLEL_MAKE=16   # how many threads to make boost with
 
-BOOST_V1=1.60.0
-BOOST_V2=1_60_0
+BOOST_VERSION=1.60.0
+BOOST_VERSION2=1_60_0
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
@@ -65,20 +61,16 @@ esac
 : ${BOOST_LIBS:="random regex graph random chrono thread signals filesystem system date_time"}
 : ${IPHONE_SDKVERSION:=`xcodebuild -showsdks | grep iphoneos | egrep "[[:digit:]]+\.[[:digit:]]+" -o | tail -1`}
 : ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
-: ${TARBALLDIR:=`pwd`}
-#: ${SRCDIR:=`pwd`/../boost_$BOOST_VERSION2}
-: ${SRCDIR:=`pwd`/src}
-: ${IOSBUILDDIR:=`pwd`/build/libs/boost/lib}
-: ${IOSINCLUDEDIR:=`pwd`/build/libs/boost/include/boost}
-: ${PREFIXDIR:=`pwd`/build/ios/prefix}
+: ${TARBALLDIR:=`pwd`/downloads}
+: ${BOOST_SRC:=`pwd`/boost_$BOOST_VERSION2/src}
+: ${IOSBUILDDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/lib}
+: ${IOSINCLUDEDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/include/boost}
+: ${PREFIXDIR:=`pwd`/boost_$BOOST_VERSION2/build/ios/prefix}
 : ${COMPILER:="clang++"}
-: ${OUTPUT_DIR:=`pwd`/libs/boost/}
-: ${OUTPUT_DIR_LIB:=`pwd`/libs/boost/ios/}
-: ${OUTPUT_DIR_SRC:=`pwd`/libs/boost/include/boost}
-: ${BOOST_VERSION:=$BOOST_V1}
-: ${BOOST_VERSION2:=$BOOST_V2}
+: ${OUTPUT_DIR:=`pwd`/boost_$BOOST_VERSION2/libs/boost/}
+: ${OUTPUT_DIR_LIB:=`pwd`/boost_$BOOST_VERSION2/libs/boost/ios/}
+: ${OUTPUT_DIR_SRC:=`pwd`/boost_$BOOST_VERSION2/libs/boost/include/boost}
 BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION2.tar.bz2
-BOOST_SRC=$SRCDIR
 BOOST_INCLUDE=$BOOST_SRC/boost
 #===============================================================================
 ARM_DEV_CMD="xcrun --sdk iphoneos"
@@ -138,9 +130,10 @@ prepare()
 #===============================================================================
 downloadBoost()
 {
-    if [ ! -s $TARBALLDIR/boost_${BOOST_VERSION2}.tar.bz2 ]; then
+    mkdir -p $TARBALLDIR
+    if [ ! -s $BOOST_TARBALL ]; then
         echo "Downloading boost ${BOOST_VERSION}"
-        curl -L -o $TARBALLDIR/boost_${BOOST_VERSION2}.tar.bz2 http://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION2}.tar.bz2/download
+        curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION2}.tar.bz2/download
     fi
     doneSection
 }
@@ -148,10 +141,20 @@ downloadBoost()
 unpackBoost()
 {
     [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
-    echo Unpacking boost into $SRCDIR...
-    [ -d $SRCDIR ]    || mkdir -p $SRCDIR
-    [ -d $BOOST_SRC ] || ( cd $SRCDIR; tar xfj $BOOST_TARBALL )
-    [ -d $BOOST_SRC ] && echo "    ...unpacked as $BOOST_SRC"
+    rm -rf $BOOST_SRC
+    echo "Unpacking boost into '$BOOST_SRC'..."
+    mkdir -p tmp && cd tmp
+    tar xfj $BOOST_TARBALL
+    if [ ! -d boost_${BOOST_VERSION2} ]; then
+        echo "can't find 'boost_${BOOST_VERSION2}' in the tarball"
+        cd ..
+        rm -rf tmp
+        exit 1
+    fi
+    mv boost_${BOOST_VERSION2} $BOOST_SRC
+    cd ..
+    rm -rf tmp
+    echo "    ...unpacked as '$BOOST_SRC'"
     doneSection
 }
 #===============================================================================
