@@ -14,7 +14,6 @@
 #
 # To configure the script, define:
 #    BOOST_LIBS:        which libraries to build
-#    IPHONE_SDKVERSION: iPhone SDK version (e.g. 8.0)
 #
 # Then run boost-build.sh from folder in which you want to see your build.
 #===============================================================================
@@ -22,7 +21,7 @@
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
 COMPILER=clang++
-PARALLEL_MAKE=16   # how many threads to make boost with
+PARALLEL_MAKE=7   # how many threads to make boost with
 
 VERSION_STRING=1.60.0
 BOOST_VERSION2=${VERSION_STRING//./_}
@@ -32,24 +31,10 @@ BOOST_VERSION2=${VERSION_STRING//./_}
 CURRENTPATH=`pwd`
 LOGDIR="$CURRENTPATH/build/logs/"
 IOS_MIN_VERSION=7.0
-SDKVERSION=`xcrun -sdk iphoneos --show-sdk-version`
-OSX_SDKVERSION=`xcrun -sdk macosx --show-sdk-version`
-DEVELOPER=`xcode-select -print-path`
-XCODE_ROOT=`xcode-select -print-path`
-if [ ! -d "$DEVELOPER" ]; then
-  echo "xcode path is not set correctly set: '$DEVELOPER' does not exist (most likely because of xcode > 4.3)"
-  echo "run"
-  echo "sudo xcode-select -switch <xcode path>"
-  echo "for default installation:"
-  echo "sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer"
-  exit 1
-fi
-case $DEVELOPER in  
-     *\ * )
-           echo "Your Xcode path contains whitespaces, which is not supported."
-           exit 1
-          ;;
-esac
+
+source get-apple-vars.sh
+source helpers.sh
+
 case $CURRENTPATH in  
      *\ * )
            echo "Your path contains whitespaces, which is not supported by 'make install'."
@@ -57,7 +42,7 @@ case $CURRENTPATH in
           ;;
 esac
 : ${BOOST_LIBS:="random regex graph random chrono thread signals filesystem system date_time"}
-: ${IPHONE_SDKVERSION:=`xcodebuild -showsdks | grep iphoneos | egrep "[[:digit:]]+\.[[:digit:]]+" -o | tail -1`}
+
 : ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
 : ${TARBALLDIR:=`pwd`/downloads}
 : ${BOOST_SRC:=`pwd`/boost_$BOOST_VERSION2/src}
@@ -77,12 +62,7 @@ OSX_DEV_CMD="xcrun --sdk macosx"
 #===============================================================================
 # Functions
 #===============================================================================
-abort()
-{
-    echo
-    echo "Aborted: $@"
-    exit 1
-}
+
 doneSection()
 {
     echo
@@ -164,9 +144,9 @@ updateBoost()
 {
     echo "Updating boost into '$BOOST_SRC'..."
     local CROSS_TOP_IOS="${DEVELOPER}/Platforms/iPhoneOS.platform/Developer"
-    local CROSS_SDK_IOS="iPhoneOS${SDKVERSION}.sdk"
+    local CROSS_SDK_IOS="iPhoneOS${IPHONE_SDKVERSION}.sdk"
     local CROSS_TOP_SIM="${DEVELOPER}/Platforms/iPhoneSimulator.platform/Developer"
-    local CROSS_SDK_SIM="iPhoneSimulator${SDKVERSION}.sdk"
+    local CROSS_SDK_SIM="iPhoneSimulator${IPHONE_SDKVERSION}.sdk"
     local BUILD_TOOLS="${DEVELOPER}"
     if [ ! -f $BOOST_SRC/tools/build/example/user-config.jam.bk ]; then
 		cp $BOOST_SRC/tools/build/example/user-config.jam $BOOST_SRC/tools/build/example/user-config.jam.bk
