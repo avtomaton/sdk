@@ -49,7 +49,7 @@ TARBALL_DIR=$COMMON_BUILD_PATH/downloads
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 SRC_FOLDER=$BUILD_PATH/src
 PLATFROM_FOLDER=$BUILD_PATH/platform
-LOG_DIR=$BUILD_PATH/logs/
+LOG_DIR=$BUILD_PATH/logs
 
 #TARBALL_NAME=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING.tar.bz2
 
@@ -131,7 +131,7 @@ function build_iphone
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
 	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$1-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/$1 --exec-prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
-	make > "${LOG}" 2>&1
+	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
@@ -148,7 +148,7 @@ function build_simulator
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
 	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/x86_64-sim --exec-prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
-	make > "${LOG}" 2>&1
+	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
