@@ -32,8 +32,8 @@ CURRENTPATH=`pwd`
 LOGDIR="$CURRENTPATH/build/logs/"
 IOS_MIN_VERSION=7.0
 
-source get-apple-vars.sh
-source helpers.sh
+source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/helpers.sh
 
 case $CURRENTPATH in  
      *\ * )

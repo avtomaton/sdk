@@ -35,8 +35,8 @@ BUILD_PATH=$COMMON_BUILD_PATH/protobuf-$VERSION_STRING
 IOS_MIN_VERSION=7.0
 
 # build parameters
-source get-apple-vars.sh
-source helpers.sh
+source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/helpers.sh
 case $BUILD_PATH in  
      *\ * )
            echo "Your path contains whitespaces, which is not supported by 'make install'."
