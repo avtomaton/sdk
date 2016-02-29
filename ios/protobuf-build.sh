@@ -26,7 +26,7 @@ PARALLEL_MAKE=7   # how many threads to build
 COMMON_BUILD_PATH=`pwd`
 LIB_NAME=protobuf
 REPO_URL=https://github.com/google/protobuf
-VERSION_STRING=v2.6.1
+VERSION_STRING=v3.0.0-beta-2
 PROTOBUF_VERSION2=${VERSION_STRING//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
@@ -129,7 +129,7 @@ function build_iphone
 	local ARCH_FLAGS="-arch $1 -isysroot ${IPHONEOS_SYSROOT} $MIN_VERSION_FLAG"
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
-	make distclean
+	[ -f Makefile ] && make distclean
 	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$1-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/$1 --exec-prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make > "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
@@ -146,7 +146,7 @@ function build_simulator
 	local ARCH_FLAGS="-arch x86_64 -isysroot ${IPHONESIMULATOR_SYSROOT} ${MIN_VERSION_FLAG}"
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
-	make distclean
+	[ -f Makefile ] && make distclean
 	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/x86_64-sim --exec-prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make > "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
