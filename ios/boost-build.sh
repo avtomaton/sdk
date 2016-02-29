@@ -28,14 +28,13 @@ BOOST_VERSION2=${VERSION_STRING//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
-CURRENTPATH=`pwd`
-LOGDIR="$CURRENTPATH/build/logs/"
+COMMON_BUILD_PATH=`pwd`
 IOS_MIN_VERSION=7.0
 
 source `dirname $0`/get-apple-vars.sh
 source `dirname $0`/helpers.sh
 
-case $CURRENTPATH in  
+case $COMMON_BUILD_PATH in  
      *\ * )
            echo "Your path contains whitespaces, which is not supported by 'make install'."
            exit 1
@@ -44,14 +43,19 @@ esac
 : ${BOOST_LIBS:="random regex graph random chrono thread signals filesystem system date_time"}
 
 : ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
-: ${TARBALLDIR:=`pwd`/downloads}
-: ${BOOST_SRC:=`pwd`/boost_$BOOST_VERSION2/src}
-: ${IOSBUILDDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/lib}
-: ${IOSINCLUDEDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/include/boost}
-: ${PREFIXDIR:=`pwd`/boost_$BOOST_VERSION2/build/ios/prefix}
-: ${OUTPUT_DIR:=`pwd`/boost_$BOOST_VERSION2/libs/boost/}
-: ${OUTPUT_DIR_LIB:=`pwd`/boost_$BOOST_VERSION2/libs/boost/ios/}
-: ${OUTPUT_DIR_SRC:=`pwd`/boost_$BOOST_VERSION2/libs/boost/include/boost}
+
+BUILD_PATH=$COMMON_BUILD_PATH/boost_$BOOST_VERSION2
+
+TARBALLDIR=$COMMON_BUILD_PATH/downloads
+BOOST_SRC=$BUILD_PATH/src
+LOG_DIR=$BUILD_PATH/logs/
+: ${IOSBUILDDIR:=$BUILD_PATH/build/libs/boost/lib}
+: ${IOSINCLUDEDIR:=$BUILD_PATH/build/libs/boost/include/boost}
+: ${PREFIXDIR:=$BUILD_PATH/build/ios/prefix}
+: ${OUTPUT_DIR:=$BUILD_PATH/libs/boost/}
+: ${OUTPUT_DIR_LIB:=$BUILD_PATH/libs/boost/ios/}
+: ${OUTPUT_DIR_SRC:=$COMMON_BUILD_PATH/include}
+
 BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION2.tar.bz2
 BOOST_INCLUDE=$BOOST_SRC/boost
 #===============================================================================
@@ -78,8 +82,7 @@ cleanEverythingReadyToStart()
     rm -rf $IOSBUILDDIR
     rm -rf $PREFIXDIR
     rm -rf $IOSINCLUDEDIR
-    rm -rf $TARBALLDIR/build
-    rm -rf $LOGDIR
+    rm -rf $LOG_DIR
     doneSection
 }
 postcleanEverything()
@@ -93,13 +96,12 @@ postcleanEverything()
 	rm -rf $IOSBUILDDIR/arm64/obj
     rm -rf $IOSBUILDDIR/i386/obj
 	rm -rf $IOSBUILDDIR/x86_64/obj
-    rm -rf $TARBALLDIR/build
-    rm -rf $LOGDIR
+    rm -rf $LOG_DIR
 	doneSection
 }
 prepare()
 {
-    mkdir -p $LOGDIR
+    mkdir -p $LOG_DIR
     mkdir -p $OUTPUT_DIR
     mkdir -p $OUTPUT_DIR_SRC
     mkdir -p $OUTPUT_DIR_LIB
@@ -191,7 +193,7 @@ buildBoostForIPhoneOS()
     
     set +e    
     echo "------------------"
-    LOG="$LOGDIR/build-iphone-stage.log"
+    LOG="$LOG_DIR/build-iphone-stage.log"
     echo "Running bjam for iphone-build stage"
     echo "To see status in realtime check:"
     echo " ${LOG}"
@@ -205,7 +207,7 @@ buildBoostForIPhoneOS()
         echo "iphone-build stage successful"
     fi
     echo "------------------"
-    LOG="$LOGDIR/build-iphone-install.log"
+    LOG="$LOG_DIR/build-iphone-install.log"
     echo "Running bjam for iphone-build install"
     echo "To see status in realtime check:"
     echo " ${LOG}"
@@ -220,7 +222,7 @@ buildBoostForIPhoneOS()
     fi
     doneSection
     echo "------------------"
-    LOG="$LOGDIR/build-iphone-simulator-build.log"
+    LOG="$LOG_DIR/build-iphone-simulator-build.log"
     echo "Running bjam for iphone-sim-build "
     echo "To see status in realtime check:"
     echo " ${LOG}"
@@ -293,9 +295,9 @@ buildIncludes()
     mkdir -p $IOSINCLUDEDIR
     echo "------------------"
     echo "Copying Includes to Final Dir $OUTPUT_DIR_SRC"
-    LOG="$LOGDIR/buildIncludes.log"
+    LOG="$LOG_DIR/buildIncludes.log"
     set +e
-    cp -r $PREFIXDIR/include/boost/*  $OUTPUT_DIR_SRC/ > "${LOG}" 2>&1
+    cp -r $PREFIXDIR/include/*  $OUTPUT_DIR_SRC/ > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while copying includes - Please check ${LOG}"
