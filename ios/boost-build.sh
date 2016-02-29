@@ -16,8 +16,7 @@
 #    BOOST_LIBS:        which libraries to build
 #    IPHONE_SDKVERSION: iPhone SDK version (e.g. 8.0)
 #
-# Then go get the source tar.bz of the boost you want to build, shove it in the
-# same directory as this script, and run "./boost.sh". Grab a cuppa. And voila.
+# Then run boost-build.sh from folder in which you want to see your build.
 #===============================================================================
 
 CPPSTD=c++11    #c++89, c++99, c++14
@@ -25,8 +24,8 @@ STDLIB=libc++   # libstdc++
 COMPILER=clang++
 PARALLEL_MAKE=16   # how many threads to make boost with
 
-BOOST_VERSION=1.60.0
-BOOST_VERSION2=${BOOST_VERSION//./_}
+VERSION_STRING=1.60.0
+BOOST_VERSION2=${VERSION_STRING//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
@@ -65,7 +64,6 @@ esac
 : ${IOSBUILDDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/lib}
 : ${IOSINCLUDEDIR:=`pwd`/boost_$BOOST_VERSION2/build/libs/boost/include/boost}
 : ${PREFIXDIR:=`pwd`/boost_$BOOST_VERSION2/build/ios/prefix}
-: ${COMPILER:="clang++"}
 : ${OUTPUT_DIR:=`pwd`/boost_$BOOST_VERSION2/libs/boost/}
 : ${OUTPUT_DIR_LIB:=`pwd`/boost_$BOOST_VERSION2/libs/boost/ios/}
 : ${OUTPUT_DIR_SRC:=`pwd`/boost_$BOOST_VERSION2/libs/boost/include/boost}
@@ -131,8 +129,8 @@ downloadBoost()
 {
     mkdir -p $TARBALLDIR
     if [ ! -s $BOOST_TARBALL ]; then
-        echo "Downloading boost ${BOOST_VERSION}"
-        curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION2}.tar.bz2/download
+        echo "Downloading boost ${VERSION_STRING}"
+        curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
     fi
     doneSection
 }
@@ -299,7 +297,7 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
     (cd $IOSBUILDDIR/i386;  $SIM_DEV_CMD ar crus libboost.a obj/*.o; )
     echo ...x86_64
     (cd $IOSBUILDDIR/x86_64;  $SIM_DEV_CMD ar crus libboost.a obj/*.o; )
-    echo "Making fat lib for iOS Boost $BOOST_VERSION"
+    echo "Making fat lib for iOS Boost '$VERSION_STRING'"
     lipo -c $IOSBUILDDIR/armv7/libboost.a \
             $IOSBUILDDIR/arm64/libboost.a \
             $IOSBUILDDIR/i386/libboost.a \
@@ -334,7 +332,7 @@ buildIncludes()
 mkdir -p $IOSBUILDDIR
 #cleanEverythingReadyToStart #may want to comment if repeatedly running during dev
 #restoreBoost
-echo "BOOST_VERSION:     $BOOST_VERSION"
+echo "BOOST_VERSION:     $VERSION_STRING"
 echo "BOOST_LIBS:        $BOOST_LIBS"
 echo "BOOST_SRC:         $BOOST_SRC"
 echo "IOSBUILDDIR:       $IOSBUILDDIR"
