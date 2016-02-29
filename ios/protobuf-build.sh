@@ -45,8 +45,8 @@ case $BUILD_PATH in
 esac
 
 # paths
-GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 TARBALL_DIR=$COMMON_BUILD_PATH/downloads
+GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 SRC_FOLDER=$BUILD_PATH/src
 PLATFROM_FOLDER=$BUILD_PATH/platform
 LOG_DIR=$BUILD_PATH/logs/
@@ -75,11 +75,12 @@ function done_section
 }
 
 # should be called with 2 parameters:
-# download_from_git <repo url> <destination folder>
+# download_from_git <repo url> <repo name>
 function download_from_git
 {
+	cd $TARBALL_DIR
 	if [ ! -d $2 ]; then
-		git clone $1 $2
+		git clone $1 `basename $2`
 	else
 		cd $2
 		git pull
@@ -182,7 +183,7 @@ function copy_to_sdk
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
 echo "Sources dir:        $SRC_FOLDER"
-echo "Build dir:          $BUILD_DIR"
+echo "Build dir:          $BUILD_PATH"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
 echo "C compiler:         $CC"
