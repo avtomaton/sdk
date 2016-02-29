@@ -143,11 +143,11 @@ restoreBoost()
 updateBoost()
 {
     echo "Updating boost into '$BOOST_SRC'..."
-    local CROSS_TOP_IOS="${DEVELOPER}/Platforms/iPhoneOS.platform/Developer"
+    local CROSS_TOP_IOS="${XCODE_ROOT}/Platforms/iPhoneOS.platform/Developer"
     local CROSS_SDK_IOS="iPhoneOS${IPHONE_SDKVERSION}.sdk"
-    local CROSS_TOP_SIM="${DEVELOPER}/Platforms/iPhoneSimulator.platform/Developer"
+    local CROSS_TOP_SIM="${XCODE_ROOT}/Platforms/iPhoneSimulator.platform/Developer"
     local CROSS_SDK_SIM="iPhoneSimulator${IPHONE_SDKVERSION}.sdk"
-    local BUILD_TOOLS="${DEVELOPER}"
+    local BUILD_TOOLS="${XCODE_ROOT}"
     if [ ! -f $BOOST_SRC/tools/build/example/user-config.jam.bk ]; then
 		cp $BOOST_SRC/tools/build/example/user-config.jam $BOOST_SRC/tools/build/example/user-config.jam.bk
 	fi

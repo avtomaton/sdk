@@ -10,17 +10,16 @@ IPHONESIMULATOR_SYSROOT=`xcrun --sdk iphonesimulator --show-sdk-path`
 OS_RELEASE=`uname -r`
 
 OSX_SDKVERSION=`xcrun -sdk macosx --show-sdk-version`
-DEVELOPER=`xcode-select -print-path`
 XCODE_ROOT=`xcode-select -print-path`
-if [ ! -d "$DEVELOPER" ]; then
-  echo "xcode path is not set correctly set: '$DEVELOPER' does not exist (most likely because of xcode > 4.3)"
+if [ ! -d "$XCODE_ROOT" ]; then
+  echo "xcode path is not set correctly set: '$XCODE_ROOT' does not exist (most likely because of xcode > 4.3)"
   echo "run"
   echo "sudo xcode-select -switch <xcode path>"
   echo "for default installation:"
   echo "sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer"
   exit 1
 fi
-case $DEVELOPER in  
+case $XCODE_ROOT in  
      *\ * )
            echo "Your Xcode path contains whitespaces, which is not supported."
            exit 1
