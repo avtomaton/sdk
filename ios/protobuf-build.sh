@@ -147,7 +147,9 @@ function build_iphone
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
 	HOST=$1
-	if [ $1 != "arm64" ]; then
+	if [ $1 == "arm64" ]; then
+		HOST=arm
+	else
 		HOST=$1-apple-${ARCH_POSTFIX}
 	fi
 	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
