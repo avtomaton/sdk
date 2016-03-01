@@ -31,7 +31,7 @@ PROTOBUF_VERSION2=${VERSION_STRING//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
-BUILD_PATH=$COMMON_BUILD_PATH/protobuf-$VERSION_STRING
+BUILD_PATH=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
 IOS_MIN_VERSION=7.0
 
 # build parameters
@@ -108,7 +108,7 @@ function cleanup
 {
 	echo 'Cleaning everything after the build...'
 	rm -rf $BUILD_PATH/platform
-    rm -rf $LOG_DIR
+	rm -rf $LOG_DIR
 	done_section "cleanup"
 }
 
@@ -185,8 +185,22 @@ function package_libraries
 {
     cd $BUILD_PATH/platform
     mkdir universal
-    lipo x86_64-sim/lib/libprotobuf.a i386-sim/lib/libprotobuf.a arm64-ios/lib/libprotobuf.a armv7s-ios/lib/libprotobuf.a armv7-ios/lib/libprotobuf.a -create -output universal/libprotobuf.a
-    lipo x86_64-sim/lib/libprotobuf-lite.a i386-sim/lib/libprotobuf-lite.a arm64-ios/lib/libprotobuf-lite.a armv7s-ios/lib/libprotobuf-lite.a armv7-ios/lib/libprotobuf-lite.a -create -output universal/libprotobuf-lite.a
+    local FOLDERS=()
+    if [ -d x86_64-sim ]; then FOLDERS+=('x86_64-sim'); fi
+    if [ -d i386-sim ]; then FOLDERS+=('i386-sim'); fi
+    if [ -d arm64-ios ]; then FOLDERS+=('arm64-ios'); fi
+    if [ -d armv7-ios ]; then FOLDERS+=('armv7-ios'); fi
+    if [ -d armv7s-ios ]; then FOLDERS+=('armv7s-ios'); fi
+    local ALL_LIBS=''
+    for i in ${FOLDERS[@]}; do
+		ALL_LIBS="$ALL_LIBS $i/lib/protobuf.a"
+	done
+    lipo $ALL_LIBS -create -output universal/libprotobuf.a
+    ALL_LIBS=''
+    for i in ${FOLDERS[@]}; do
+		ALL_LIBS="$ALL_LIBS $i/lib/protobuf-lite.a"
+	done
+    lipo $ALL_LIBS -create -output universal/libprotobuf-lite.a
     done_section "packaging fat lib"
 }
 
