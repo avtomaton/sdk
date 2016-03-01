@@ -49,12 +49,9 @@ BUILD_PATH=$COMMON_BUILD_PATH/boost_$BOOST_VERSION2
 TARBALLDIR=$COMMON_BUILD_PATH/downloads
 BOOST_SRC=$BUILD_PATH/src
 LOG_DIR=$BUILD_PATH/logs/
-: ${IOSBUILDDIR:=$BUILD_PATH/build/libs/boost/lib}
 : ${IOSINCLUDEDIR:=$BUILD_PATH/build/libs/boost/include/boost}
 : ${PREFIXDIR:=$BUILD_PATH/build/ios/prefix}
 : ${OUTPUT_DIR:=$BUILD_PATH/libs/boost/}
-: ${OUTPUT_DIR_LIB:=$BUILD_PATH/libs/boost/ios/}
-: ${OUTPUT_DIR_SRC:=$COMMON_BUILD_PATH/include}
 
 BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION2.tar.bz2
 BOOST_INCLUDE=$BOOST_SRC/boost
@@ -79,9 +76,7 @@ cleanEverythingReadyToStart()
 {
     echo 'Cleaning everything before we start to build...'
     rm -rf iphone-build iphonesim-build osx-build
-    rm -rf $IOSBUILDDIR
     rm -rf $PREFIXDIR
-    rm -rf $IOSINCLUDEDIR
     rm -rf $LOG_DIR
     doneSection
 }
@@ -90,12 +85,6 @@ postcleanEverything()
 	echo 'Cleaning everything after the build...'
 	rm -rf iphone-build iphonesim-build osx-build
 	rm -rf $PREFIXDIR
-	rm -rf $IOSBUILDDIR/armv6/obj
-    rm -rf $IOSBUILDDIR/armv7/obj
-    #rm -rf $IOSBUILDDIR/armv7s/obj
-	rm -rf $IOSBUILDDIR/arm64/obj
-    rm -rf $IOSBUILDDIR/i386/obj
-	rm -rf $IOSBUILDDIR/x86_64/obj
     rm -rf $LOG_DIR
 	doneSection
 }
@@ -103,8 +92,6 @@ prepare()
 {
     mkdir -p $LOG_DIR
     mkdir -p $OUTPUT_DIR
-    mkdir -p $OUTPUT_DIR_SRC
-    mkdir -p $OUTPUT_DIR_LIB
 }
 #===============================================================================
 downloadBoost()
@@ -240,64 +227,66 @@ buildBoostForIPhoneOS()
 #===============================================================================
 scrunchAllLibsTogetherInOneLibPerPlatform()
 {
-    cd $BOOST_SRC
-    mkdir -p $IOSBUILDDIR/armv7/obj
-    #mkdir -p $IOSBUILDDIR/armv7s/obj
-	mkdir -p $IOSBUILDDIR/arm64/obj
-    mkdir -p $IOSBUILDDIR/i386/obj
-	mkdir -p $IOSBUILDDIR/x86_64/obj
-    ALL_LIBS=""
-    echo Splitting all existing fat binaries...
-    for NAME in $BOOST_LIBS; do
-        ALL_LIBS="$ALL_LIBS libboost_$NAME.a"
-        $ARM_DEV_CMD lipo "iphone-build/stage/lib/libboost_$NAME.a" -thin armv7 -o $IOSBUILDDIR/armv7/libboost_$NAME.a
-        #$ARM_DEV_CMD lipo "iphone-build/stage/lib/libboost_$NAME.a" -thin armv7s -o $IOSBUILDDIR/armv7s/libboost_$NAME.a
-		$ARM_DEV_CMD lipo "iphone-build/stage/lib/libboost_$NAME.a" -thin arm64 -o $IOSBUILDDIR/arm64/libboost_$NAME.a
-		$ARM_DEV_CMD lipo "iphonesim-build/stage/lib/libboost_$NAME.a" -thin i386 -o $IOSBUILDDIR/i386/libboost_$NAME.a
-		$ARM_DEV_CMD lipo "iphonesim-build/stage/lib/libboost_$NAME.a" -thin x86_64 -o $IOSBUILDDIR/x86_64/libboost_$NAME.a
-  
-    done
-    echo "Decomposing each architecture's .a files"
-    for NAME in $ALL_LIBS; do
-        echo Decomposing $NAME...
-        (cd $IOSBUILDDIR/armv7/obj; ar -x ../$NAME );
-        #(cd $IOSBUILDDIR/armv7s/obj; ar -x ../$NAME );
-		(cd $IOSBUILDDIR/arm64/obj; ar -x ../$NAME );
-        (cd $IOSBUILDDIR/i386/obj; ar -x ../$NAME );
-		(cd $IOSBUILDDIR/x86_64/obj; ar -x ../$NAME );
-    done
-    echo "Linking each architecture into an uberlib ($ALL_LIBS => libboost.a )"
-    rm $IOSBUILDDIR/*/libboost.a
+	cd $BOOST_SRC
+	
+	#local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
+	local ARCHS=('armv7' 'arm64' 'i386' 'x86_64')
     
-    echo ...armv7
-    (cd $IOSBUILDDIR/armv7; $ARM_DEV_CMD ar crus libboost.a obj/*.o; )
-    #echo ...armv7s
-    #(cd $IOSBUILDDIR/armv7s; $ARM_DEV_CMD ar crus libboost.a obj/*.o; )
-    echo ...arm64
-    (cd $IOSBUILDDIR/arm64; $ARM_DEV_CMD ar crus libboost.a obj/*.o; )
-    echo ...i386
-    (cd $IOSBUILDDIR/i386;  $SIM_DEV_CMD ar crus libboost.a obj/*.o; )
-    echo ...x86_64
-    (cd $IOSBUILDDIR/x86_64;  $SIM_DEV_CMD ar crus libboost.a obj/*.o; )
-    echo "Making fat lib for iOS Boost '$VERSION_STRING'"
-    lipo -c $IOSBUILDDIR/armv7/libboost.a \
-            $IOSBUILDDIR/arm64/libboost.a \
-            $IOSBUILDDIR/i386/libboost.a \
-            $IOSBUILDDIR/x86_64/libboost.a \
-            -output $OUTPUT_DIR_LIB/libboost.a
+	local IOS_BUILD_DIR=$BUILD_DIR/tmp
+	
+	for a in ${ARCHS[@]}; do
+		mkdir -p $IOS_BUILD_DIR/$a/obj
+		mkdir -p $COMMON_BUILD_PATH/lib/$a
+	done
+	
+	ALL_LIBS=""
+	echo 'Splitting all existing fat binaries...'
+    
+	for NAME in $BOOST_LIBS; do
+		ALL_LIBS="$ALL_LIBS libboost_$NAME.a"
+		for a in ${ARCHS[@]}; do
+			$ARM_DEV_CMD lipo "iphone-build/stage/lib/libboost_$NAME.a" -thin $a -o $COMMON_BUILD_PATH/lib/$a/libboost_$NAME.a
+		done
+	done
+	echo "Decomposing each architecture's .a files"
+	for NAME in $ALL_LIBS; do
+		echo "Decomposing $NAME..."
+		for a in ${ARCHS[@]}; do
+			cd $IOS_BUILD_DIR/$a/obj
+			ar -x $COMMON_BUILD_PATH/lib/$a/$NAME
+		done
+	done
+	echo "Linking each architecture into an uberlib ($ALL_LIBS => libboost.a )"
+	
+	rm $IOS_BUILD_DIR/*/libboost.a
+
+	for a in ${ARCHS[@]}; do
+		echo "...$a"
+		cd $COMMON_BUILD_PATH/lib/$a
+		$ARM_DEV_CMD ar crus libboost.a $IOS_BUILD_DIR/$a/obj/*.o;
+	done
+
+	echo "Making fat lib for iOS Boost '$VERSION_STRING'"
+	
+	mkdir -p $COMMON_BUILD_PATH/lib/universal
+	lipo -c $COMMON_BUILD_PATH/lib/armv7/libboost.a \
+            $COMMON_BUILD_PATH/lib/arm64/libboost.a \
+            $COMMON_BUILD_PATH/lib/i386/libboost.a \
+            $COMMON_BUILD_PATH/lib/x86_64/libboost.a \
+            -output $COMMON_BUILD_PATH/lib/universal/libboost.a
+	rm -rf $IOS_BUILD_DIR
     echo "Completed Fat Lib"
     echo "------------------"
 }
 #===============================================================================
-buildIncludes()
+function copy_headers
 {
-    
-    mkdir -p $IOSINCLUDEDIR
+	mkdir -p $COMMON_BUILD_PATH/include
     echo "------------------"
-    echo "Copying Includes to Final Dir $OUTPUT_DIR_SRC"
+    echo "Copying Includes to Final Dir $COMMON_BUILD_PATH/include"
     LOG="$LOG_DIR/buildIncludes.log"
     set +e
-    cp -r $PREFIXDIR/include/*  $OUTPUT_DIR_SRC/ > "${LOG}" 2>&1
+    cp -r $PREFIXDIR/include/*  $COMMON_BUILD_PATH/include > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while copying includes - Please check ${LOG}"
@@ -311,13 +300,11 @@ buildIncludes()
 #===============================================================================
 # Execution starts here
 #===============================================================================
-mkdir -p $IOSBUILDDIR
 #cleanEverythingReadyToStart #may want to comment if repeatedly running during dev
 #restoreBoost
 echo "BOOST_VERSION:     $VERSION_STRING"
 echo "BOOST_LIBS:        $BOOST_LIBS"
 echo "BOOST_SRC:         $BOOST_SRC"
-echo "IOSBUILDDIR:       $IOSBUILDDIR"
 echo "PREFIXDIR:         $PREFIXDIR"
 echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
 echo "XCODE_ROOT:        $XCODE_ROOT"
@@ -335,8 +322,7 @@ bootstrapBoost
 updateBoost
 buildBoostForIPhoneOS
 scrunchAllLibsTogetherInOneLibPerPlatform
-buildIncludes
+copy_headers
 #restoreBoost
 postcleanEverything
 echo "Completed successfully"
-#===============================================================================
