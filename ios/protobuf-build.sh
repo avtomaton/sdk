@@ -209,12 +209,13 @@ function copy_to_sdk
 {
 	cd $COMMON_BUILD_PATH
     mkdir -p bin
-    mkdir -p $1/include
-    mkdir -p $1/lib
+    mkdir -p include
+    mkdir -p lib/$1
     cp -r $BUILD_PATH/platform/x86_64-mac/bin/protoc bin
-    cp -r $BUILD_PATH/platform/$1/* lib
-    lipo -info $1/lib/libprotobuf.a
-    lipo -info $1/lib/libprotobuf-lite.a
+    cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
+    cp -r $BUILD_PATH/platform/$1/lib/* lib/$1
+    lipo -info lib/$1/libprotobuf.a
+    lipo -info lib/$1/libprotobuf-lite.a
     done_section "copying into sdk"
 }
 
