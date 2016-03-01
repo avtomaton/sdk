@@ -127,7 +127,7 @@ function build_protoc
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-macos.log"
 	[ -f Makefile ] && make distclean
-	./configure --disable-shared --prefix=${BUILD_PATH}/macos --exec-prefix=${PREFIX}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --disable-shared --prefix=${BUILD_PATH}/macos --exec-prefix=${BUILD_PATH}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
