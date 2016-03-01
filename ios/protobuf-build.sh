@@ -127,13 +127,14 @@ function build_protoc
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-macos.log"
 	[ -f Makefile ] && make distclean
-	./configure --disable-shared --prefix=${BUILD_PATH}/macos --exec-prefix=${BUILD_PATH}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --disable-shared --prefix=${BUILD_PATH}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building protoc - Please check ${LOG}"
         exit 1
     fi
+    make install
 }
 
 # example:
@@ -145,13 +146,14 @@ function build_iphone
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$1-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/$1 --exec-prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$1-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
         exit 1
     fi
+    make install
 	done_section "building $1"
 }
 
@@ -162,13 +164,14 @@ function build_simulator
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/x86_64-sim --exec-prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
         exit 1
     fi
+    make install
 	done_section "building simulator"
 }
 
