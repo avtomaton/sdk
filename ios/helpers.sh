@@ -33,3 +33,9 @@ function download_cmake_ios_toolchain
 		exit 1
 	fi
 }
+
+# run_cmake_ios <arch> <parameters>
+function run_cmake_ios
+{
+	cmake -DCMAKE_CXX_FLAGS="-arch $ARCH" -DCMAKE_TOOLCHAIN_FILE=$COMMON_BUILD_PATH/build-tools/build-tools/ios-cmake/toolchain/iOS.cmake -DCMAKE_IOS_SDK_ROOT=$IPHONEOS_SYSROOT $1
+}
