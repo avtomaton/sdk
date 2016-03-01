@@ -184,7 +184,7 @@ function build_simulator
 function package_libraries
 {
     cd $BUILD_PATH/platform
-    mkdir -p universal
+    mkdir -p universal/lib
     local FOLDERS=()
     if [ -d x86_64-sim ]; then FOLDERS+=('x86_64-sim'); fi
     if [ -d i386-sim ]; then FOLDERS+=('i386-sim'); fi
@@ -195,12 +195,12 @@ function package_libraries
     for i in ${FOLDERS[@]}; do
 		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf.a"
 	done
-    lipo $ALL_LIBS -create -output universal/libprotobuf.a
+    lipo $ALL_LIBS -create -output universal/lib/libprotobuf.a
     ALL_LIBS=''
     for i in ${FOLDERS[@]}; do
 		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf-lite.a"
 	done
-    lipo $ALL_LIBS -create -output universal/libprotobuf-lite.a
+    lipo $ALL_LIBS -create -output universal/lib/libprotobuf-lite.a
     done_section "packaging fat lib"
 }
 
