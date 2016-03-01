@@ -114,7 +114,6 @@ function cleanup
 
 function automake_run
 {
-	rm -rf $BUILD_PATH
 	cp -r $GIT_REPO_DIR $BUILD_PATH
 	cd $BUILD_PATH
 	./autogen.sh
@@ -196,6 +195,7 @@ fi
 
 download_from_git $REPO_URL $GIT_REPO_DIR
 # invent_missing_headers
+rm -rf $BUILD_PATH
 create_paths
 automake_run
 build_iphone armv7
