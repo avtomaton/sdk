@@ -122,6 +122,20 @@ function automake_run
 	cd $COMMON_BUILD_PATH
 }
 
+function build_protoc
+{
+	cd $BUILD_PATH
+	LOG="$LOG_DIR/build-macos.log"
+	[ -f Makefile ] && make distclean
+	./configure --disable-shared --prefix=${BUILD_PATH}/macos --exec-prefix=${PREFIX}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	make >> "${LOG}" 2>&1
+	if [ $? != 0 ]; then 
+        tail -n 100 "${LOG}"
+        echo "Problem while building protoc - Please check ${LOG}"
+        exit 1
+    fi
+}
+
 # example:
 # build_inphone armv7|armv7s|arm64
 function build_iphone
@@ -198,6 +212,7 @@ fi
 download_from_git $REPO_URL $GIT_REPO_DIR
 # invent_missing_headers
 automake_run
+build_protoc
 build_iphone armv7
 build_iphone armv7s
 build_iphone arm64
