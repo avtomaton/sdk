@@ -17,13 +17,16 @@
 #
 #===============================================================================
 
+source `dirname $0`/paths-config.sh
+source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/helpers.sh
+
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
 CC=clang
 CXX=clang++
 PARALLEL_MAKE=7   # how many threads to build
 
-COMMON_BUILD_PATH=`pwd`
 LIB_NAME=protobuf
 REPO_URL=https://github.com/google/protobuf
 VERSION_STRING=v3.0.0-beta-2
@@ -35,17 +38,11 @@ BUILD_PATH=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
 IOS_MIN_VERSION=7.0
 
 # build parameters
+source `dirname $0`/paths-config.sh
 source `dirname $0`/get-apple-vars.sh
 source `dirname $0`/helpers.sh
-case $BUILD_PATH in  
-     *\ * )
-           echo "Your path contains whitespaces, which is not supported by 'make install'."
-           exit 1
-          ;;
-esac
 
 # paths
-TARBALL_DIR=$COMMON_BUILD_PATH/downloads
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 SRC_FOLDER=$BUILD_PATH/src
 PLATFROM_FOLDER=$BUILD_PATH/platform
@@ -63,16 +60,6 @@ OSX_DEV_CMD="xcrun --sdk macosx"
 
 ARCH_POSTFIX=darwin$OS_RELEASE
 PROTOC=${PLATFROM_FOLDER}/x86_64-mac/bin/protoc
-
-function done_section
-{
-	echo
-	echo "$1 complete"
-	echo
-	
-	# just in case
-	cd $COMMON_BUILD_PATH
-}
 
 # should be called with 2 parameters:
 # download_from_git <repo url> <repo name>

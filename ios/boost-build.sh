@@ -18,6 +18,10 @@
 # Then run boost-build.sh from folder in which you want to see your build.
 #===============================================================================
 
+source `dirname $0`/paths-config.sh
+source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/helpers.sh
+
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
 COMPILER=clang++
@@ -28,25 +32,14 @@ BOOST_VERSION2=${VERSION_STRING//./_}
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
-COMMON_BUILD_PATH=`pwd`
 IOS_MIN_VERSION=7.0
 
-source `dirname $0`/get-apple-vars.sh
-source `dirname $0`/helpers.sh
-
-case $COMMON_BUILD_PATH in  
-     *\ * )
-           echo "Your path contains whitespaces, which is not supported by 'make install'."
-           exit 1
-          ;;
-esac
 : ${BOOST_LIBS:="random regex graph random chrono thread signals filesystem system date_time"}
 
 : ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
 
 BUILD_PATH=$COMMON_BUILD_PATH/boost_$BOOST_VERSION2
 
-TARBALLDIR=$COMMON_BUILD_PATH/downloads
 BOOST_SRC=$BUILD_PATH/src
 LOG_DIR=$BUILD_PATH/logs/
 : ${IOSINCLUDEDIR:=$BUILD_PATH/build/libs/boost/include/boost}
@@ -64,29 +57,23 @@ OSX_DEV_CMD="xcrun --sdk macosx"
 # Functions
 #===============================================================================
 
-doneSection()
-{
-    echo
-    echo "================================================================="
-    echo "Done"
-    echo
-}
-#===============================================================================
 cleanEverythingReadyToStart()
 {
     echo 'Cleaning everything before we start to build...'
+    cd $BUILD_PATH
     rm -rf iphone-build iphonesim-build osx-build
     rm -rf $PREFIXDIR
     rm -rf $LOG_DIR
-    doneSection
+    done_section "pre-cleaning"
 }
 postcleanEverything()
 {
 	echo 'Cleaning everything after the build...'
+	cd $BUILD_PATH
 	rm -rf iphone-build iphonesim-build osx-build
 	rm -rf $PREFIXDIR
     rm -rf $LOG_DIR
-	doneSection
+	done_section "cleanup"
 }
 prepare()
 {
@@ -101,11 +88,12 @@ downloadBoost()
         echo "Downloading boost ${VERSION_STRING}"
         curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
     fi
-    doneSection
+    done_section "download"
 }
 #===============================================================================
 unpackBoost()
 {
+	cd $BUILD_PATH
     [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
     rm -rf $BOOST_SRC
     echo "Unpacking boost into '$BOOST_SRC'..."
@@ -121,7 +109,7 @@ unpackBoost()
     cd ..
     rm -rf tmp
     echo "    ...unpacked as '$BOOST_SRC'"
-    doneSection
+    done_section "unpack"
 }
 #===============================================================================
 restoreBoost()
@@ -152,7 +140,7 @@ using darwin : ${IPHONE_SDKVERSION}~iphonesim
 : <architecture>x86 <target-os>iphone
 ;
 EOF
-    doneSection
+    done_section "update"
 }
 #===============================================================================
 inventMissingHeaders()
@@ -170,7 +158,7 @@ bootstrapBoost()
     BOOST_LIBS_COMMA=$(echo $BOOST_LIBS | sed -e "s/ /,/g")
     echo "Bootstrapping (with libs $BOOST_LIBS_COMMA)"
     ./bootstrap.sh --with-libraries=$BOOST_LIBS_COMMA
-    doneSection
+    done_section "bootstrapping"
 }
 #===============================================================================
 buildBoostForIPhoneOS()
@@ -222,7 +210,7 @@ buildBoostForIPhoneOS()
     else 
         echo "iphone-simulator build successful"
     fi
-    doneSection
+    done_section "iphone build"
 }
 #===============================================================================
 scrunchAllLibsTogetherInOneLibPerPlatform()
@@ -275,8 +263,7 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
             $COMMON_BUILD_PATH/lib/x86_64/libboost.a \
             -output $COMMON_BUILD_PATH/lib/universal/libboost.a
 	rm -rf $IOS_BUILD_DIR
-    echo "Completed Fat Lib"
-    echo "------------------"
+    done_section "fat lib"
 }
 #===============================================================================
 function copy_headers
@@ -294,8 +281,7 @@ function copy_headers
     else 
         echo "Copy of Includes successful"
     fi
-    echo "------------------"
-    doneSection
+    done_section "headers copy"
 }
 #===============================================================================
 # Execution starts here
