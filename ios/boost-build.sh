@@ -93,6 +93,7 @@ downloadBoost()
 #===============================================================================
 unpackBoost()
 {
+	mkdir -p $BUILD_PATH
 	cd $BUILD_PATH
     [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
     rm -rf $BOOST_SRC
