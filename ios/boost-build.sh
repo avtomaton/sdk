@@ -46,7 +46,7 @@ LOG_DIR=$BUILD_PATH/logs/
 : ${PREFIXDIR:=$BUILD_PATH/build/ios/prefix}
 : ${OUTPUT_DIR:=$BUILD_PATH/libs/boost/}
 
-BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION2.tar.bz2
+BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
 BOOST_INCLUDE=$BOOST_SRC/boost
 #===============================================================================
 ARM_DEV_CMD="xcrun --sdk iphoneos"
@@ -83,7 +83,7 @@ prepare()
 #===============================================================================
 downloadBoost()
 {
-    mkdir -p $TARBALLDIR
+    mkdir -p $TARBALL_DIR
     if [ ! -s $BOOST_TARBALL ]; then
         echo "Downloading boost ${VERSION_STRING}"
         curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
