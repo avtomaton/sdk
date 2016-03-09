@@ -221,7 +221,7 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 	#local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
 	local ARCHS=('armv7' 'arm64' 'i386' 'x86_64')
     
-	local IOS_BUILD_DIR=$BUILD_DIR/tmp
+	local IOS_BUILD_DIR=$BUILD_PATH/tmp
 	
 	for a in ${ARCHS[@]}; do
 		mkdir -p $IOS_BUILD_DIR/$a/obj
