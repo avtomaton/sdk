@@ -18,9 +18,12 @@
 #===============================================================================
 
 # build parameters
-source `dirname $0`/paths-config.sh
-source `dirname $0`/get-apple-vars.sh
-source `dirname $0`/helpers.sh
+SCRIPT_DIR=`dirname $0`
+source $SCRIPT_DIR/paths-config.sh
+source $SCRIPT_DIR/get-apple-vars.sh
+source $SCRIPT_DIR/helpers.sh
+
+export XCODE_XCCONFIG_FILE=$SCRIPT_DIR/no-code-sign.xcconfig
 
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
@@ -93,33 +96,25 @@ function cleanup
 	done_section "cleanup"
 }
 
+# example:
+# cmake_run armv7|armv7s|arm64
 function cmake_run
 {
 	mkdir -p $BUILD_PATH
 	rm -rf $BUILD_PATH/*
 	create_paths
 	cd $BUILD_PATH
-	cmake $GIT_REPO_DIR
+	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -G Xcode $GIT_REPO_DIR
 	cd $COMMON_BUILD_PATH
 }
 
-# example:
-# build_inphone armv7|armv7s|arm64
 function build_iphone
 {
-	local MIN_VERSION_FLAG="-miphoneos-version-min=${IOS_MIN_VERSION}"
-	local ARCH_FLAGS="-arch $1 -isysroot ${IPHONEOS_SYSROOT} $MIN_VERSION_FLAG"
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
-	HOST=$1
-	if [ $1 == "arm64" ]; then
-		HOST=arm
-	else
-		HOST=$1-apple-${ARCH_POSTFIX}
-	fi
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
-	make >> "${LOG}" 2>&1
+	# xcodebuild -list -project gflags.xcodeproj
+	xcodebuild -target gflags -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
@@ -127,24 +122,6 @@ function build_iphone
     fi
     make install
 	done_section "building $1"
-}
-
-function build_simulator
-{
-	local MIN_VERSION_FLAG="-mios-simulator-version-min=${IOS_MIN_VERSION}"
-	local ARCH_FLAGS="-arch x86_64 -isysroot ${IPHONESIMULATOR_SYSROOT} ${MIN_VERSION_FLAG}"
-	cd $BUILD_PATH
-	LOG="$LOG_DIR/build-$1.log"
-	[ -f Makefile ] && make distclean
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
-	make >> "${LOG}" 2>&1
-	if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while building $1 - Please check ${LOG}"
-        exit 1
-    fi
-    make install
-	done_section "building simulator"
 }
 
 function package_libraries
@@ -159,14 +136,9 @@ function package_libraries
     if [ -d armv7s-ios ]; then FOLDERS+=('armv7s-ios'); fi
     local ALL_LIBS=''
     for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf.a"
+		ALL_LIBS="$ALL_LIBS $i/lib/libgflags.a"
 	done
-    lipo $ALL_LIBS -create -output universal/lib/libprotobuf.a
-    ALL_LIBS=''
-    for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf-lite.a"
-	done
-    lipo $ALL_LIBS -create -output universal/lib/libprotobuf-lite.a
+    lipo $ALL_LIBS -create -output universal/lib/libgflags.a
     done_section "packaging fat lib"
 }
 
@@ -177,11 +149,9 @@ function copy_to_sdk
     mkdir -p bin
     mkdir -p include
     mkdir -p lib/$1
-    cp -r $BUILD_PATH/platform/x86_64-mac/bin/protoc bin
     cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
     cp -r $BUILD_PATH/platform/$1/lib/* lib/$1
-    lipo -info lib/$1/libprotobuf.a
-    lipo -info lib/$1/libprotobuf-lite.a
+    lipo -info lib/$1/libgflags.a
     done_section "copying into sdk"
 }
 
@@ -200,13 +170,8 @@ else
 fi
 
 download_from_git $REPO_URL $GIT_REPO_DIR
-# invent_missing_headers
-automake_run
-build_protoc
+cmake_run armv7
 build_iphone armv7
-build_iphone armv7s
-build_iphone arm64
-build_simulator
 package_libraries
 copy_to_sdk universal
 cleanup
