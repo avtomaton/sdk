@@ -80,7 +80,7 @@ prepare()
     mkdir -p $LOG_DIR
     mkdir -p $OUTPUT_DIR
 }
-#===============================================================================
+
 downloadBoost()
 {
     mkdir -p $TARBALL_DIR
@@ -90,7 +90,7 @@ downloadBoost()
     fi
     done_section "download"
 }
-#===============================================================================
+
 unpackBoost()
 {
 	mkdir -p $BUILD_PATH
