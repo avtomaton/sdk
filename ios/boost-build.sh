@@ -259,11 +259,11 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 	echo "Making fat lib for iOS Boost '$VERSION_STRING'"
 	
 	mkdir -p $COMMON_BUILD_PATH/lib/universal
-	lipo -c $COMMON_BUILD_PATH/lib/armv7/libboost.a \
-            $COMMON_BUILD_PATH/lib/arm64/libboost.a \
-            $COMMON_BUILD_PATH/lib/i386/libboost.a \
-            $COMMON_BUILD_PATH/lib/x86_64/libboost.a \
-            -output $COMMON_BUILD_PATH/lib/universal/libboost.a
+	ARCH_LIBS=""
+	for a in ${ARCHS[@]}; do
+		ARCH_LIBS="$COMMON_BUILD_PATH/lib/$a/libboost.a $ARCH_LIBS"
+	done
+	lipo -c $ARCH_LIBS -output $COMMON_BUILD_PATH/lib/universal/libboost.a
 	rm -rf $IOS_BUILD_DIR
     done_section "fat lib"
 }
