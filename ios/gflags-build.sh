@@ -42,7 +42,7 @@ IOS_MIN_VERSION=7.0
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-SRC_FOLDER=$BUILD_PATH/src
+SRC_FOLDER=$BUILD_PATH
 PLATFROM_FOLDER=$BUILD_PATH/platform
 LOG_DIR=$BUILD_PATH/logs
 
@@ -91,73 +91,74 @@ function create_paths
 function cleanup
 {
 	echo 'Cleaning everything after the build...'
-	rm -rf $BUILD_PATH/platform
+	# rm -rf $BUILD_PATH
 	rm -rf $LOG_DIR
 	done_section "cleanup"
 }
 
 # example:
 # cmake_run armv7|armv7s|arm64
-function cmake_run
-{
-	mkdir -p $BUILD_PATH
-	rm -rf $BUILD_PATH/*
-	create_paths
-	cd $BUILD_PATH
-	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -G Xcode $GIT_REPO_DIR
-	cd $COMMON_BUILD_PATH
-}
-
 function build_iphone
 {
-	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
-	[ -f Makefile ] && make distclean
+	
+	mkdir -p $BUILD_PATH/$1
+	rm -rf $BUILD_PATH/$1/*
+	create_paths
+	cd $BUILD_PATH/$1
+	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_PREFIX_INSTALL=./install -G Xcode $GIT_REPO_DIR
+	
 	# xcodebuild -list -project gflags.xcodeproj
-	xcodebuild -target gflags -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
+	xcodebuild -target install -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
+	
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while building $1 - Please check ${LOG}"
         exit 1
     fi
-    make install
-	done_section "building $1"
+    done_section "building $1"
+    
+	cd $COMMON_BUILD_PATH
 }
 
 function package_libraries
 {
-    cd $BUILD_PATH/platform
-    mkdir -p universal/lib
-    local FOLDERS=()
-    if [ -d x86_64-sim ]; then FOLDERS+=('x86_64-sim'); fi
-    if [ -d i386-sim ]; then FOLDERS+=('i386-sim'); fi
-    if [ -d arm64-ios ]; then FOLDERS+=('arm64-ios'); fi
-    if [ -d armv7-ios ]; then FOLDERS+=('armv7-ios'); fi
-    if [ -d armv7s-ios ]; then FOLDERS+=('armv7s-ios'); fi
-    local ALL_LIBS=''
-    for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libgflags.a"
-	done
-    lipo $ALL_LIBS -create -output universal/lib/libgflags.a
-    done_section "packaging fat lib"
-}
+    local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
+    local TOOL_LIBS=('libgflags.a' 'libgflags_nothreads.a')
+    local ALL_LIBS=""
+    
+    cd $BUILD_PATH
 
-# copy_to_sdk universal|armv7|armv7s|arm64|sim
-function copy_to_sdk
-{
-	cd $COMMON_BUILD_PATH
-    mkdir -p bin
-    mkdir -p include
-    mkdir -p lib/$1
-    cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
-    cp -r $BUILD_PATH/platform/$1/lib/* lib/$1
-    lipo -info lib/$1/libgflags.a
-    done_section "copying into sdk"
+    # copy bin and includes
+    for a in ${ARCHS[@]}; do
+		if [ -d $BUILD_PATH/$a ]; then
+			mkdir -p $COMMON_BUILD_PATH/include
+			mkdir -p $COMMON_BUILD_PATH/bin
+			cp $a/install/bin/* $COMMON_BUILD_PATH/bin
+			cp -r $a/install/include/gflags $COMMON_BUILD_PATH/include/
+			break
+		fi
+	done
+    
+    # create fat lib
+    for ll in ${TOOL_LIBS[@]}; do
+		ALL_LIBS=""
+		for a in ${ARCHS[@]}; do
+			if [ -d $BUILD_PATH/$a ]; then
+				mkdir -p $COMMON_BUILD_PATH/lib/$a
+				cp $a/lib/Release/$ll $COMMON_BUILD_PATH/lib/$a
+				ALL_LIBS="$ALL_LIBS $a/lib/Release/$ll"
+			fi
+		done
+		lipo $ALL_LIBS -create -output $COMMON_BUILD_PATH/lib/universal/$ll
+		lipo -info $COMMON_BUILD_PATH/lib/universal/$ll
+	done
+    done_section "packaging fat libs"
 }
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $SRC_FOLDER"
+echo "Sources dir:        $GIT_REPO_DIR"
 echo "Build dir:          $BUILD_PATH"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
@@ -170,10 +171,9 @@ else
 fi
 
 download_from_git $REPO_URL $GIT_REPO_DIR
-cmake_run armv7
 build_iphone armv7
+build_iphone armv64
 package_libraries
-copy_to_sdk universal
 cleanup
 echo "Completed successfully"
 
