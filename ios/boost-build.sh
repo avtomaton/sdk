@@ -235,7 +235,12 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 	for NAME in $BOOST_LIBS; do
 		ALL_LIBS="$ALL_LIBS libboost_$NAME.a"
 		for a in ${ARCHS[@]}; do
-			$ARM_DEV_CMD lipo "iphone-build/stage/lib/libboost_$NAME.a" -thin $a -o $COMMON_BUILD_PATH/lib/$a/libboost_$NAME.a
+			if [ ${a:0:3} == 'arm' ]; then
+				stage_dir=iphone-build
+			else
+				stage_dir=iphonesim-build
+			fi
+			$ARM_DEV_CMD lipo "$stage_dir/stage/lib/libboost_$NAME.a" -thin $a -o $COMMON_BUILD_PATH/lib/$a/libboost_$NAME.a
 		done
 	done
 	echo "Decomposing each architecture's .a files"
