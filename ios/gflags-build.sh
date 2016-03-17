@@ -140,7 +140,7 @@ function package_libraries
 		fi
 	done
     
-    # create fat lib
+    # copy arch libs and create fat lib
     for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do
