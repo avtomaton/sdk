@@ -139,7 +139,7 @@ function build_iphone
 	else
 		HOST=$1-apple-${ARCH_POSTFIX}
 	fi
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1-ios "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
@@ -157,7 +157,7 @@ function build_simulator
 	cd $BUILD_PATH
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/x86_64-sim "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/x86_64 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
@@ -173,11 +173,11 @@ function package_libraries
     cd $BUILD_PATH/platform
     mkdir -p universal/lib
     local FOLDERS=()
-    if [ -d x86_64-sim ]; then FOLDERS+=('x86_64-sim'); fi
-    if [ -d i386-sim ]; then FOLDERS+=('i386-sim'); fi
-    if [ -d arm64-ios ]; then FOLDERS+=('arm64-ios'); fi
-    if [ -d armv7-ios ]; then FOLDERS+=('armv7-ios'); fi
-    if [ -d armv7s-ios ]; then FOLDERS+=('armv7s-ios'); fi
+    if [ -d x86_64 ]; then FOLDERS+=('x86_64'); fi
+    if [ -d i386 ]; then FOLDERS+=('i386'); fi
+    if [ -d arm64 ]; then FOLDERS+=('arm64'); fi
+    if [ -d armv7 ]; then FOLDERS+=('armv7'); fi
+    if [ -d armv7s ]; then FOLDERS+=('armv7s'); fi
     local ALL_LIBS=''
     for i in ${FOLDERS[@]}; do
 		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf.a"
@@ -195,15 +195,21 @@ function package_libraries
 function copy_to_sdk
 {
 	cd $COMMON_BUILD_PATH
-    mkdir -p bin
-    mkdir -p include
-    mkdir -p lib/$1
-    cp -r $BUILD_PATH/platform/x86_64-mac/bin/protoc bin
-    cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
-    cp -r $BUILD_PATH/platform/$1/lib/* lib/$1
-    lipo -info lib/$1/libprotobuf.a
-    lipo -info lib/$1/libprotobuf-lite.a
-    done_section "copying into sdk"
+	mkdir -p bin
+	mkdir -p include
+	cp -r $BUILD_PATH/platform/x86_64-mac/bin/protoc bin
+	cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
+	
+	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64' 'universal')
+	for a in ${ARCHS[@]}; do
+		if [ -d $BUILD_PATH/platform/$a ]; then
+			mkdir -p lib/$a
+			cp -r $BUILD_PATH/platform/$a/lib/* lib/$a
+			lipo -info lib/$a/libprotobuf.a
+			lipo -info lib/$a/libprotobuf-lite.a
+		fi
+	done
+	done_section "copying into sdk"
 }
 
 echo "Library:            $LIB_NAME"
@@ -229,7 +235,7 @@ build_iphone armv7s
 build_iphone arm64
 build_simulator
 package_libraries
-copy_to_sdk universal
+copy_to_sdk
 cleanup
 echo "Completed successfully"
 
