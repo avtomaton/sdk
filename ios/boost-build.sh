@@ -27,6 +27,7 @@ STDLIB=libc++   # libstdc++
 COMPILER=clang++
 PARALLEL_MAKE=7   # how many threads to make boost with
 
+LIB_NAME=boost
 VERSION_STRING=1.60.0
 BOOST_VERSION2=${VERSION_STRING//./_}
 
@@ -42,12 +43,12 @@ BUILD_PATH=$COMMON_BUILD_PATH/boost_$BOOST_VERSION2
 
 BOOST_SRC=$BUILD_PATH/src
 LOG_DIR=$BUILD_PATH/logs/
-: ${IOSINCLUDEDIR:=$BUILD_PATH/build/libs/boost/include/boost}
-: ${PREFIXDIR:=$BUILD_PATH/build/ios/prefix}
-: ${OUTPUT_DIR:=$BUILD_PATH/libs/boost/}
+IOSINCLUDEDIR=$BUILD_PATH/build/libs/$LIB_NAME/include/boost
+PREFIXDIR=$BUILD_PATH/build/ios/prefix
+OUTPUT_DIR=$BUILD_PATH/libs/$LIB_NAME/
 
 BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
-BOOST_INCLUDE=$BOOST_SRC/boost
+BOOST_INCLUDE=$BOOST_SRC/$LIB_NAME
 #===============================================================================
 ARM_DEV_CMD="xcrun --sdk iphoneos"
 SIM_DEV_CMD="xcrun --sdk iphonesimulator"
@@ -81,7 +82,7 @@ prepare()
     mkdir -p $OUTPUT_DIR
 }
 
-downloadBoost()
+function download_tarball
 {
     mkdir -p $TARBALL_DIR
     if [ ! -s $BOOST_TARBALL ]; then
@@ -91,7 +92,7 @@ downloadBoost()
     done_section "download"
 }
 
-unpackBoost()
+function unpack_tarball
 {
 	mkdir -p $BUILD_PATH
 	cd $BUILD_PATH
@@ -112,7 +113,7 @@ unpackBoost()
     echo "    ...unpacked as '$BOOST_SRC'"
     done_section "unpack"
 }
-#===============================================================================
+
 restoreBoost()
 {
     cp $BOOST_SRC/tools/build/example/user-config.jam.bk $BOOST_SRC/tools/build/example/user-config.jam
@@ -301,8 +302,8 @@ if [ -z ${BITCODE} ]; then
 else 
     echo "BITCODE EMBEDDED: YES with: $BITCODE"
 fi
-downloadBoost
-unpackBoost
+download_tarball
+unpack_tarball
 inventMissingHeaders
 prepare
 bootstrapBoost
