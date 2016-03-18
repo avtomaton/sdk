@@ -23,8 +23,6 @@ source $SCRIPT_DIR/paths-config.sh
 source $SCRIPT_DIR/get-apple-vars.sh
 source $SCRIPT_DIR/helpers.sh
 
-export XCODE_XCCONFIG_FILE=$SCRIPT_DIR/no-code-sign.xcconfig
-
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
 CC=clang
