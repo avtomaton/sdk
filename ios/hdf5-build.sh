@@ -126,7 +126,10 @@ function cmake_prepare
 	xcodebuild -target H5make_libsettings -configuration Release -project HDF5.xcodeproj
 	cp $BUILD_PATH/osx/bin/Release/H5detect $COMMON_BUILD_PATH/bin
 	cp $BUILD_PATH/osx/bin/Release/H5make_libsettings $COMMON_BUILD_PATH/bin
-	
+}
+
+function apply_patches
+{
 	# apply patch for
 	# disabling building H5Detect, H5make_libsettings
 	# arm binary will fail on host machine without this step
@@ -209,7 +212,9 @@ fi
 
 unpack_tarball
 cmake_prepare
+apply_patches
 build_iphone armv7
+build_iphone arm64
 package_libraries
 cleanup
 echo "Completed successfully"
