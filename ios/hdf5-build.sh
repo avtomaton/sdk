@@ -36,8 +36,8 @@ VERSION_STRING=1.8.16
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
-SRC_FOLDER=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
-BUILD_PATH=$SRC_FOLDER/build
+SRC_DIR=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
+BUILD_PATH=$SRC_DIR/build
 IOS_MIN_VERSION=7.0
 
 # paths
@@ -61,7 +61,7 @@ function invent_missing_headers
     # They are supported on the device, so we copy them from x86 SDK to a staging area
     # to use them on ARM, too.
     echo 'Creating missing headers...'
-    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $SRC_FOLDER
+    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $SRC_DIR
 }
 
 function download_tarball
@@ -78,8 +78,8 @@ function unpack_tarball
 {
 	mkdir -p $COMMON_BUILD_PATH
     [ -f "$HDF5_TARBALL" ] || abort "Source tarball missing."
-    rm -rf $SRC_FOLDER
-    echo "Unpacking boost into '$SRC_FOLDER'..."
+    rm -rf $SRC_DIR
+    echo "Unpacking boost into '$SRC_DIR'..."
     mkdir -p tmp && cd tmp
     tar -zxvf $HDF5_TARBALL
     if [ ! -d $LIB_NAME-$VERSION_STRING ]; then
@@ -88,10 +88,10 @@ function unpack_tarball
         rm -rf tmp
         exit 1
     fi
-    mv $LIB_NAME-$VERSION_STRING $SRC_FOLDER
+    mv $LIB_NAME-$VERSION_STRING $SRC_DIR
     cd ..
     rm -rf tmp
-    echo "    ...unpacked as '$SRC_FOLDER'"
+    echo "    ...unpacked as '$SRC_DIR'"
     done_section "unpack"
 }
 
@@ -112,15 +112,15 @@ function cmake_prepare
 {
 	mkdir -p $BUILD_PATH/osx
 	mkdir -p $COMMON_BUILD_PATH/bin
-	mv $SRC_FOLDER/examples $SRC_FOLDER/examples-bak
-	mv $SRC_FOLDER/test $SRC_FOLDER/test-bak
-	mv $SRC_FOLDER/tools $SRC_FOLDER/tools-bak
+	mv $SRC_DIR/examples $SRC_DIR/examples-bak
+	mv $SRC_DIR/test $SRC_DIR/test-bak
+	mv $SRC_DIR/tools $SRC_DIR/tools-bak
 	
 	# create native build for using H5detect, H5make_libsettings
 	rm -rf $BUILD_PATH/osx/*
 	create_paths
 	cd $BUILD_PATH/osx
-	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_FOLDER
+	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
 	# xcodebuild -list -project HDF5.xcodeproj
 	xcodebuild -target H5detect -configuration Release -project HDF5.xcodeproj
 	xcodebuild -target H5make_libsettings -configuration Release -project HDF5.xcodeproj
@@ -128,12 +128,12 @@ function cmake_prepare
 	cp $BUILD_PATH/osx/bin/Release/H5make_libsettings $COMMON_BUILD_PATH/bin
 }
 
-function apply_patches
+function patch_sources
 {
 	# apply patch for
 	# disabling building H5Detect, H5make_libsettings
 	# arm binary will fail on host machine without this step
-	cd $SRC_FOLDER
+	cd $SRC_DIR
 	if [ ! -f src/CMakeLists.txt.bak ]; then
 		cp src/CMakeLists.txt src/CmakeLists.txt.bak
 		cp src/H5private.h src/H5private.h.bak
@@ -155,7 +155,7 @@ function build_iphone
 	cd $BUILD_PATH/$1
 	cp $COMMON_BUILD_PATH/bin/H5detect $BUILD_PATH/$1
 	cp $COMMON_BUILD_PATH/bin/H5make_libsettings $BUILD_PATH/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -DBUILD_TESTING=OFF -G Xcode $SRC_FOLDER
+	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -DBUILD_TESTING=OFF -G Xcode $SRC_DIR
 	xcodebuild -target install -configuration Release -project HDF5.xcodeproj
 	cd $COMMON_BUILD_PATH
 	done_section "building $1"
@@ -198,7 +198,7 @@ function package_libraries
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $SRC_FOLDER"
+echo "Sources dir:        $SRC_DIR"
 echo "Build dir:          $BUILD_PATH"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
@@ -212,7 +212,7 @@ fi
 
 unpack_tarball
 cmake_prepare
-apply_patches
+patch_sources
 build_iphone armv7
 build_iphone arm64
 package_libraries
