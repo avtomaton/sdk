@@ -120,7 +120,7 @@ function cmake_prepare
 	rm -rf $BUILD_PATH/osx/*
 	create_paths
 	cd $BUILD_PATH/osx
-	cmake -DBUILD_TESTING=OFF -G Xcode $SRC_FOLDER
+	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_FOLDER
 	# xcodebuild -list -project HDF5.xcodeproj
 	xcodebuild -target H5detect -configuration Release -project HDF5.xcodeproj
 	xcodebuild -target H5make_libsettings -configuration Release -project HDF5.xcodeproj
@@ -133,7 +133,11 @@ function cmake_prepare
 	cd $SRC_FOLDER
 	if [ ! -f src/CMakeLists.txt.bak ]; then
 		cp src/CMakeLists.txt src/CmakeLists.txt.bak
+		cp src/H5private.h src/H5private.h.bak
+		cp src/H5FDstdio.c src/H5FDstdio.c.bak
 		patch src/CMakeLists.txt $SCRIPT_DIR/hdf5detect-disable.patch
+		patch src/H5private.h $SCRIPT_DIR/hdf5-h5private.patch
+		patch src/H5FDstdio.c $SCRIPT_DIR/hdf5-h5fdstdio.patch
 	fi
 	cd $BUILD_PATH
 }
@@ -156,33 +160,37 @@ function build_iphone
 
 function package_libraries
 {
-    cd $BUILD_PATH/platform
-    mkdir -p universal/lib
-    local FOLDERS=()
-    if [ -d x86_64-sim ]; then FOLDERS+=('x86_64-sim'); fi
-    if [ -d i386-sim ]; then FOLDERS+=('i386-sim'); fi
-    if [ -d arm64-ios ]; then FOLDERS+=('arm64-ios'); fi
-    if [ -d armv7-ios ]; then FOLDERS+=('armv7-ios'); fi
-    if [ -d armv7s-ios ]; then FOLDERS+=('armv7s-ios'); fi
-    local ALL_LIBS=''
-    for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libgflags.a"
-	done
-    lipo $ALL_LIBS -create -output universal/lib/libgflags.a
-    done_section "packaging fat lib"
-}
+	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
+	local TOOL_LIBS=('libhdf5_cpp.a' 'libhdf5_hl_cpp.a' 'libndf5.a' 'libhdf5_hl.a')
+	local ALL_LIBS=""
 
-# copy_to_sdk universal|armv7|armv7s|arm64|sim
-function copy_to_sdk
-{
-	cd $COMMON_BUILD_PATH
-    mkdir -p bin
-    mkdir -p include
-    mkdir -p lib/$1
-    cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
-    cp -r $BUILD_PATH/platform/$1/lib/* lib/$1
-    lipo -info lib/$1/libgflags.a
-    done_section "copying into sdk"
+	cd $BUILD_PATH
+
+	# copy bin and includes
+	mkdir -p $COMMON_BUILD_PATH/include/hdf5
+	mkdir -p $COMMON_BUILD_PATH/share
+	for a in ${ARCHS[@]}; do
+		if [ -d $BUILD_PATH/$a ]; then
+			cp $a/install/include/* $COMMON_BUILD_PATH/include/hdf5
+			cp -r $a/install/share/cmake $COMMON_BUILD_PATH/share/
+			break
+		fi
+	done
+    
+	# copy arch libs and create fat lib
+	for ll in ${TOOL_LIBS[@]}; do
+		ALL_LIBS=""
+		for a in ${ARCHS[@]}; do
+			if [ -d $BUILD_PATH/$a ]; then
+				mkdir -p $COMMON_BUILD_PATH/lib/$a
+				cp $a/install/lib/$ll $COMMON_BUILD_PATH/lib/$a
+				ALL_LIBS="$ALL_LIBS $a/install/lib/$ll"
+			fi
+		done
+		lipo $ALL_LIBS -create -output $COMMON_BUILD_PATH/lib/universal/$ll
+		lipo -info $COMMON_BUILD_PATH/lib/universal/$ll
+	done
+	done_section "packaging fat libs"
 }
 
 echo "Library:            $LIB_NAME"
@@ -201,10 +209,8 @@ fi
 
 unpack_tarball
 cmake_prepare
-cmake_run armv7
 build_iphone armv7
 package_libraries
-copy_to_sdk universal
 cleanup
 echo "Completed successfully"
 

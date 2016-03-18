@@ -1,0 +1,11 @@
+--- src/H5FDstdio.c	2016-03-18 03:13:05.899823691 +0300
++++ src/H5FDstdio.c	2016-03-18 03:06:26.159791000 +0300
+@@ -136,6 +136,8 @@
+  * Assume fseeko, which is POSIX standard, is always supported; 
+  * but prefer to use fseeko64 if supported. 
+  */
++int fseeko(FILE *stream, off_t offset, int whence);
++off_t ftello(FILE *stream);
+ #ifndef file_fseek
+     #ifdef H5_HAVE_FSEEKO64
+         #define file_fseek      fseeko64
