@@ -123,23 +123,23 @@ function build_iphone
 
 function package_libraries
 {
-    local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
-    local TOOL_LIBS=('libglog.a')
-    local ALL_LIBS=""
-    
-    cd $BUILD_PATH
+	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
+	local TOOL_LIBS=('libglog.a')
+	local ALL_LIBS=""
+	
+	cd $BUILD_PATH
 
-    # copy bin and includes
-    for a in ${ARCHS[@]}; do
+	# copy bin and includes
+	for a in ${ARCHS[@]}; do
 		if [ -d $BUILD_PATH/$a ]; then
 			mkdir -p $COMMON_BUILD_PATH/include
 			cp -r $a/glog $COMMON_BUILD_PATH/include/
 			break
 		fi
 	done
-    
-    # copy arch libs and create fat lib
-    for ll in ${TOOL_LIBS[@]}; do
+	
+	# copy arch libs and create fat lib
+	for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do
 			if [ -d $BUILD_PATH/$a ]; then
@@ -151,7 +151,7 @@ function package_libraries
 		lipo $ALL_LIBS -create -output $COMMON_BUILD_PATH/lib/universal/$ll
 		lipo -info $COMMON_BUILD_PATH/lib/universal/$ll
 	done
-    done_section "packaging fat libs"
+	done_section "packaging fat libs"
 }
 
 echo "Library:            $LIB_NAME"
