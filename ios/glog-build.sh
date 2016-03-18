@@ -42,7 +42,7 @@ IOS_MIN_VERSION=7.0
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-SRC_FOLDER=$BUILD_PATH
+SRC_DIR=$GIT_REPO_DIR
 PLATFROM_FOLDER=$BUILD_PATH/platform
 LOG_DIR=$BUILD_PATH/logs
 
@@ -80,7 +80,7 @@ function invent_missing_headers
     # They are supported on the device, so we copy them from x86 SDK to a staging area
     # to use them on ARM, too.
     echo 'Creating missing headers...'
-    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $SRC_FOLDER
+    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $SRC_DIR
 }
 
 function create_paths
@@ -106,7 +106,7 @@ function build_iphone
 	rm -rf $BUILD_PATH/$1/*
 	create_paths
 	cd $BUILD_PATH/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_PREFIX_INSTALL=./install -G Xcode $GIT_REPO_DIR
+	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_PREFIX_INSTALL=./install -G Xcode $SRC_DIR
 	
 	# xcodebuild -list -project google-glog.xcodeproj
 	xcodebuild -target glog -configuration Release -project google-glog.xcodeproj > "${LOG}" 2>&1
@@ -130,10 +130,11 @@ function package_libraries
 	cd $BUILD_PATH
 
 	# copy bin and includes
+	mkdir -p $COMMON_BUILD_PATH/include/glog
+	cp $SRC_DIR/src/glog/log_severity.h $COMMON_BUILD_PATH/include/glog
 	for a in ${ARCHS[@]}; do
 		if [ -d $BUILD_PATH/$a ]; then
-			mkdir -p $COMMON_BUILD_PATH/include
-			cp -r $a/glog $COMMON_BUILD_PATH/include/
+			cp -r $a/glog/* $COMMON_BUILD_PATH/include/glog
 			break
 		fi
 	done
@@ -156,7 +157,8 @@ function package_libraries
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $GIT_REPO_DIR"
+echo "Repository:         $GIT_REPO_DIR"
+echo "Sources dir:        $SRC_DIR"
 echo "Build dir:          $BUILD_PATH"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
