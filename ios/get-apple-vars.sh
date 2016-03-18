@@ -25,3 +25,13 @@ case $XCODE_ROOT in
            exit 1
           ;;
 esac
+
+# invent_missing_headers <sources dir>
+function invent_missing_headers
+{
+    # These files are missing in the ARM iPhoneOS SDK, but they are in the simulator.
+    # They are supported on the device, so we copy them from x86 SDK to a staging area
+    # to use them on ARM, too.
+    echo 'Creating missing headers...'
+    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $1
+}

@@ -39,16 +39,16 @@ IOS_MIN_VERSION=7.0
 
 : ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
 
-BUILD_PATH=$COMMON_BUILD_PATH/boost_$BOOST_VERSION2
+BUILD_PATH=$COMMON_BUILD_PATH/build/$LIB_NAME-$VERSION_STRING
 
-BOOST_SRC=$BUILD_PATH/src
+SRC_DIR=$COMMON_BUILD_PATH/src/$LIB_NAME-$VERSION_STRING
 LOG_DIR=$BUILD_PATH/logs/
 IOSINCLUDEDIR=$BUILD_PATH/build/libs/$LIB_NAME/include/boost
 PREFIXDIR=$BUILD_PATH/build/ios/prefix
 OUTPUT_DIR=$BUILD_PATH/libs/$LIB_NAME/
 
 BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
-BOOST_INCLUDE=$BOOST_SRC/$LIB_NAME
+BOOST_INCLUDE=$SRC_DIR/$LIB_NAME
 #===============================================================================
 ARM_DEV_CMD="xcrun --sdk iphoneos"
 SIM_DEV_CMD="xcrun --sdk iphonesimulator"
@@ -97,8 +97,8 @@ function unpack_tarball
 	mkdir -p $BUILD_PATH
 	cd $BUILD_PATH
     [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
-    rm -rf $BOOST_SRC
-    echo "Unpacking boost into '$BOOST_SRC'..."
+    rm -rf $SRC_DIR
+    echo "Unpacking boost into '$SRC_DIR'..."
     mkdir -p tmp && cd tmp
     tar xfj $BOOST_TARBALL
     if [ ! -d boost_${BOOST_VERSION2} ]; then
@@ -107,30 +107,25 @@ function unpack_tarball
         rm -rf tmp
         exit 1
     fi
-    mv boost_${BOOST_VERSION2} $BOOST_SRC
+    mv boost_${BOOST_VERSION2} $SRC_DIR
     cd ..
     rm -rf tmp
-    echo "    ...unpacked as '$BOOST_SRC'"
+    echo "    ...unpacked as '$SRC_DIR'"
     done_section "unpack"
 }
 
-restoreBoost()
-{
-    cp $BOOST_SRC/tools/build/example/user-config.jam.bk $BOOST_SRC/tools/build/example/user-config.jam
-}
-#===============================================================================
 updateBoost()
 {
-    echo "Updating boost into '$BOOST_SRC'..."
+    echo "Updating boost into '$SRC_DIR'..."
     local CROSS_TOP_IOS="${XCODE_ROOT}/Platforms/iPhoneOS.platform/Developer"
     local CROSS_SDK_IOS="iPhoneOS${IPHONE_SDKVERSION}.sdk"
     local CROSS_TOP_SIM="${XCODE_ROOT}/Platforms/iPhoneSimulator.platform/Developer"
     local CROSS_SDK_SIM="iPhoneSimulator${IPHONE_SDKVERSION}.sdk"
     local BUILD_TOOLS="${XCODE_ROOT}"
-    if [ ! -f $BOOST_SRC/tools/build/example/user-config.jam.bk ]; then
-		cp $BOOST_SRC/tools/build/example/user-config.jam $BOOST_SRC/tools/build/example/user-config.jam.bk
+    if [ ! -f $SRC_DIR/tools/build/example/user-config.jam.bk ]; then
+		cp $SRC_DIR/tools/build/example/user-config.jam $SRC_DIR/tools/build/example/user-config.jam.bk
 	fi
-    cat >> $BOOST_SRC/tools/build/example/user-config.jam <<EOF
+    cat >> $SRC_DIR/tools/build/example/user-config.jam <<EOF
 using darwin : ${IPHONE_SDKVERSION}~iphone
 : $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch armv7 -arch arm64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}" -I${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}/usr/include/
 : <striper> <root>$XCODE_ROOT/Platforms/iPhoneOS.platform/Developer
@@ -144,28 +139,19 @@ using darwin : ${IPHONE_SDKVERSION}~iphonesim
 EOF
     done_section "update"
 }
-#===============================================================================
-inventMissingHeaders()
-{
-    # These files are missing in the ARM iPhoneOS SDK, but they are in the simulator.
-    # They are supported on the device, so we copy them from x86 SDK to a staging area
-    # to use them on ARM, too.
-    echo Invent missing headers
-    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $BOOST_SRC
-}
-#===============================================================================
+
 bootstrapBoost()
 {
-    cd $BOOST_SRC
+    cd $SRC_DIR
     BOOST_LIBS_COMMA=$(echo $BOOST_LIBS | sed -e "s/ /,/g")
     echo "Bootstrapping (with libs $BOOST_LIBS_COMMA)"
     ./bootstrap.sh --with-libraries=$BOOST_LIBS_COMMA
     done_section "bootstrapping"
 }
-#===============================================================================
+
 buildBoostForIPhoneOS()
 {
-    cd $BOOST_SRC
+    cd $SRC_DIR
     # Install this one so we can copy the includes for the frameworks...
     
     set +e    
@@ -175,7 +161,7 @@ buildBoostForIPhoneOS()
     echo "To see status in realtime check:"
     echo " ${LOG}"
     echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$BOOST_SRC/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
+    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while Building iphone-build stage - Please check ${LOG}"
@@ -189,7 +175,7 @@ buildBoostForIPhoneOS()
     echo "To see status in realtime check:"
     echo " ${LOG}"
     echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$BOOST_SRC/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
+    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while Building iphone-build install - Please check ${LOG}"
@@ -204,7 +190,7 @@ buildBoostForIPhoneOS()
     echo "To see status in realtime check:"
     echo " ${LOG}"
     echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphonesim-build -sBOOST_BUILD_USER_CONFIG=$BOOST_SRC/tools/build/example/user-config.jam --stagedir=iphonesim-build/stage --toolset=darwin-${IPHONE_SDKVERSION}~iphonesim architecture=x86 target-os=iphone variant=release cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage > "${LOG}" 2>&1
+    ./bjam -j${PARALLEL_MAKE} --build-dir=iphonesim-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphonesim-build/stage --toolset=darwin-${IPHONE_SDKVERSION}~iphonesim architecture=x86 target-os=iphone variant=release cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while Building iphone-simulator build - Please check ${LOG}"
@@ -217,7 +203,7 @@ buildBoostForIPhoneOS()
 #===============================================================================
 scrunchAllLibsTogetherInOneLibPerPlatform()
 {
-	cd $BOOST_SRC
+	cd $SRC_DIR
 	
 	#local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
 	local ARCHS=('armv7' 'arm64' 'i386' 'x86_64')
@@ -297,7 +283,7 @@ function copy_headers
 #restoreBoost
 echo "BOOST_VERSION:     $VERSION_STRING"
 echo "BOOST_LIBS:        $BOOST_LIBS"
-echo "BOOST_SRC:         $BOOST_SRC"
+echo "Sources dir:       $SRC_DIR"
 echo "PREFIXDIR:         $PREFIXDIR"
 echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
 echo "XCODE_ROOT:        $XCODE_ROOT"
@@ -309,13 +295,12 @@ else
 fi
 download_tarball
 unpack_tarball
-inventMissingHeaders
+invent_missing_headers $SRC_DIR
 prepare
 bootstrapBoost
 updateBoost
 buildBoostForIPhoneOS
 scrunchAllLibsTogetherInOneLibPerPlatform
 copy_headers
-#restoreBoost
 postcleanEverything
 echo "Completed successfully"
