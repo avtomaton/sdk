@@ -1,0 +1,66 @@
+--- cmake/Dependencies.cmake	2016-03-18 03:42:31.000000000 +0300
++++ cmake/Dependencies.cmake	2016-03-18 05:08:22.000000000 +0300
+@@ -2,31 +2,35 @@
+ set(Caffe_LINKER_LIBS "")
+ 
+ # ---[ Boost
+-find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
+-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+-list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
++#find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
++#include_directories(SYSTEM ${Boost_INCLUDE_DIR})
++#list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
++list(APPEND Caffe_LINKER_LIBS boost)
+ 
+ # ---[ Threads
+ find_package(Threads REQUIRED)
+ list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
+ 
+ # ---[ Google-glog
+-include("cmake/External/glog.cmake")
+-include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
+-list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
++#include("cmake/External/glog.cmake")
++#include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
++#list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
++list(APPEND Caffe_LINKER_LIBS glog)
+ 
+ # ---[ Google-gflags
+-include("cmake/External/gflags.cmake")
+-include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
+-list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
++#include("cmake/External/gflags.cmake")
++#include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
++#list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
++list(APPEND Caffe_LINKER_LIBS gflags)
+ 
+ # ---[ Google-protobuf
+ include(cmake/ProtoBuf.cmake)
+ 
+ # ---[ HDF5
+-find_package(HDF5 COMPONENTS HL REQUIRED)
+-include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
+-list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
++#find_package(HDF5 COMPONENTS HL REQUIRED)
++#include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
++#list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
++list(APPEND Caffe_LINKER_LIBS hdf5 hdf5_hl)
+ 
+ # ---[ LMDB
+ if(USE_LMDB)
+@@ -99,9 +103,12 @@
+     add_definitions(-DUSE_MKL)
+   endif()
+ elseif(APPLE)
+-  find_package(vecLib REQUIRED)
+-  include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
+-  list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
++  #find_package(vecLib REQUIRED)
++  #include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
++  #message(${vecLib_LINKER_LIBS})
++  #list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
++  find_library(acc_lib Accelerate)
++  list(APPEND Caffe_LINKER_LIBS ${acc_lib})
+ endif()
+ 
+ # ---[ Python
