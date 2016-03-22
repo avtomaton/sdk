@@ -70,34 +70,38 @@ function create_paths
 
 function download_tarball
 {
-    mkdir -p $TARBALL_DIR
-    if [ ! -s $BOOST_TARBALL ]; then
-        echo "Downloading boost ${VERSION_STRING}"
-        curl -L -o $BOOST_TARBALL $TARBALL_URL
-    fi
-    done_section "download"
+	mkdir -p $TARBALL_DIR
+	if [ ! -s $BOOST_TARBALL ]; then
+		echo "Downloading boost ${VERSION_STRING}"
+		curl -L -o $BOOST_TARBALL $TARBALL_URL
+	fi
+	done_section "download"
 }
 
 function unpack_tarball
 {
+	if [ -d $SRC_DIR ]; then
+		return
+	fi
+	
 	mkdir -p $BUILD_DIR
 	cd $BUILD_DIR
-    [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
-    rm -rf $SRC_DIR
-    echo "Unpacking boost into '$SRC_DIR'..."
-    mkdir -p tmp && cd tmp
-    tar xfj $BOOST_TARBALL
-    if [ ! -d boost_${BOOST_VERSION2} ]; then
-        echo "can't find 'boost_${BOOST_VERSION2}' in the tarball"
-        cd ..
-        rm -rf tmp
-        exit 1
-    fi
-    mv boost_${BOOST_VERSION2} $SRC_DIR
-    cd ..
-    rm -rf tmp
-    echo "    ...unpacked as '$SRC_DIR'"
-    done_section "unpack"
+	[ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
+	echo "Unpacking boost into '$SRC_DIR'..."
+	mkdir -p tmp && cd tmp
+	tar xfj $BOOST_TARBALL
+	if [ ! -d boost_${BOOST_VERSION2} ]; then
+		echo "can't find 'boost_${BOOST_VERSION2}' in the tarball"
+		cd ..
+		rm -rf tmp
+		exit 1
+	fi
+	mkdir -p $SRC_DIR
+	mv boost_${BOOST_VERSION2}/* $SRC_DIR/
+	cd ..
+	rm -rf tmp
+	echo "    ...unpacked as '$SRC_DIR'"
+	done_section "unpack"
 }
 
 updateBoost()
@@ -110,8 +114,7 @@ updateBoost()
     local BUILD_TOOLS="${XCODE_ROOT}"
     if [ ! -f $SRC_DIR/tools/build/example/user-config.jam.bk ]; then
 		cp $SRC_DIR/tools/build/example/user-config.jam $SRC_DIR/tools/build/example/user-config.jam.bk
-	fi
-    cat >> $SRC_DIR/tools/build/example/user-config.jam <<EOF
+		cat >> $SRC_DIR/tools/build/example/user-config.jam <<EOF
 using darwin : ${IPHONE_SDKVERSION}~iphone
 : $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch armv7 -arch arm64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}" -I${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}/usr/include/
 : <striper> <root>$XCODE_ROOT/Platforms/iPhoneOS.platform/Developer
@@ -123,6 +126,7 @@ using darwin : ${IPHONE_SDKVERSION}~iphonesim
 : <architecture>x86 <target-os>iphone
 ;
 EOF
+	fi
     done_section "update"
 }
 
@@ -137,6 +141,7 @@ bootstrapBoost()
 
 buildBoostForIPhoneOS()
 {
+	mkdir -p $BUILD_DIR
     cd $SRC_DIR
     # Install this one so we can copy the includes for the frameworks...
     
@@ -267,13 +272,13 @@ function copy_headers
 #===============================================================================
 #cleanEverythingReadyToStart #may want to comment if repeatedly running during dev
 #restoreBoost
-echo "BOOST_VERSION:     $VERSION_STRING"
-echo "BOOST_LIBS:        $BOOST_LIBS"
-echo "Sources dir:       $SRC_DIR"
+echo "Boost version:      $VERSION_STRING"
+echo "Boost libraries:    $BOOST_LIBS"
+echo "Sources dir:        $SRC_DIR"
 echo "PREFIX_DIR:         $PREFIX_DIR"
-echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
-echo "XCODE_ROOT:        $XCODE_ROOT"
-echo "COMPILER:          $COMPILER"
+echo "iPhone SDK version: $IPHONE_SDKVERSION"
+echo "Xcode root:         $XCODE_ROOT"
+echo "Compiler:           $COMPILER"
 if [ -z ${BITCODE} ]; then
     echo "BITCODE EMBEDDED: NO $BITCODE"
 else 
