@@ -30,56 +30,42 @@ PARALLEL_MAKE=7   # how many threads to make boost with
 LIB_NAME=boost
 VERSION_STRING=1.60.0
 BOOST_VERSION2=${VERSION_STRING//./_}
+TARBALL_URL=http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
 
 IOS_MIN_VERSION=7.0
 
-: ${BOOST_LIBS:="random regex graph random chrono thread signals filesystem system date_time"}
+BOOST_LIBS="random regex graph random chrono thread signals filesystem system date_time"
 
-: ${EXTRA_CPPFLAGS:="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"}
+EXTRA_CPPFLAGS="-fPIC -DBOOST_SP_USE_SPINLOCK -std=$CPPSTD -stdlib=$STDLIB -miphoneos-version-min=$IOS_MIN_VERSION $BITCODE -fvisibility=hidden -fvisibility-inlines-hidden"
 
-BUILD_PATH=$COMMON_BUILD_PATH/build/$LIB_NAME-$VERSION_STRING
+SRC_DIR=$COMMON_BUILD_DIR/src/$LIB_NAME-$VERSION_STRING
+BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
-SRC_DIR=$COMMON_BUILD_PATH/src/$LIB_NAME-$VERSION_STRING
-LOG_DIR=$BUILD_PATH/logs/
-IOSINCLUDEDIR=$BUILD_PATH/build/libs/$LIB_NAME/include/boost
-PREFIXDIR=$BUILD_PATH/build/ios/prefix
-OUTPUT_DIR=$BUILD_PATH/libs/$LIB_NAME/
+LOG_DIR=$BUILD_DIR/logs/
+PREFIX_DIR=$BUILD_DIR/build/ios/prefix
 
 BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
 BOOST_INCLUDE=$SRC_DIR/$LIB_NAME
-#===============================================================================
-ARM_DEV_CMD="xcrun --sdk iphoneos"
-SIM_DEV_CMD="xcrun --sdk iphonesimulator"
-OSX_DEV_CMD="xcrun --sdk macosx"
-#===============================================================================
+
 #===============================================================================
 # Functions
 #===============================================================================
 
-cleanEverythingReadyToStart()
-{
-    echo 'Cleaning everything before we start to build...'
-    cd $BUILD_PATH
-    rm -rf iphone-build iphonesim-build osx-build
-    rm -rf $PREFIXDIR
-    rm -rf $LOG_DIR
-    done_section "pre-cleaning"
-}
-postcleanEverything()
+function cleanup
 {
 	echo 'Cleaning everything after the build...'
-	cd $BUILD_PATH
+	cd $BUILD_DIR
 	rm -rf iphone-build iphonesim-build osx-build
-	rm -rf $PREFIXDIR
+	rm -rf $PREFIX_DIR
     rm -rf $LOG_DIR
 	done_section "cleanup"
 }
-prepare()
+
+function create_paths
 {
     mkdir -p $LOG_DIR
-    mkdir -p $OUTPUT_DIR
 }
 
 function download_tarball
@@ -87,15 +73,15 @@ function download_tarball
     mkdir -p $TARBALL_DIR
     if [ ! -s $BOOST_TARBALL ]; then
         echo "Downloading boost ${VERSION_STRING}"
-        curl -L -o $BOOST_TARBALL http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
+        curl -L -o $BOOST_TARBALL $TARBALL_URL
     fi
     done_section "download"
 }
 
 function unpack_tarball
 {
-	mkdir -p $BUILD_PATH
-	cd $BUILD_PATH
+	mkdir -p $BUILD_DIR
+	cd $BUILD_DIR
     [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
     rm -rf $SRC_DIR
     echo "Unpacking boost into '$SRC_DIR'..."
@@ -161,7 +147,7 @@ buildBoostForIPhoneOS()
     echo "To see status in realtime check:"
     echo " ${LOG}"
     echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
+    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while Building iphone-build stage - Please check ${LOG}"
@@ -175,7 +161,7 @@ buildBoostForIPhoneOS()
     echo "To see status in realtime check:"
     echo " ${LOG}"
     echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIXDIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
+    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while Building iphone-build install - Please check ${LOG}"
@@ -200,19 +186,19 @@ buildBoostForIPhoneOS()
     fi
     done_section "iphone build"
 }
-#===============================================================================
-scrunchAllLibsTogetherInOneLibPerPlatform()
+
+function package_libraries
 {
 	cd $SRC_DIR
 	
 	#local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
 	local ARCHS=('armv7' 'arm64' 'i386' 'x86_64')
     
-	local IOS_BUILD_DIR=$BUILD_PATH/tmp
+	local IOS_BUILD_DIR=$BUILD_DIR/tmp
 	
 	for a in ${ARCHS[@]}; do
 		mkdir -p $IOS_BUILD_DIR/$a/obj
-		mkdir -p $COMMON_BUILD_PATH/lib/$a
+		mkdir -p $COMMON_BUILD_DIR/lib/$a
 	done
 	
 	ALL_LIBS=""
@@ -226,7 +212,7 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 			else
 				stage_dir=iphonesim-build
 			fi
-			$ARM_DEV_CMD lipo "$stage_dir/stage/lib/libboost_$NAME.a" -thin $a -o $COMMON_BUILD_PATH/lib/$a/libboost_$NAME.a
+			$ARM_DEV_CMD lipo "$stage_dir/stage/lib/libboost_$NAME.a" -thin $a -o $COMMON_BUILD_DIR/lib/$a/libboost_$NAME.a
 		done
 	done
 	echo "Decomposing each architecture's .a files"
@@ -234,7 +220,7 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 		echo "Decomposing $NAME..."
 		for a in ${ARCHS[@]}; do
 			cd $IOS_BUILD_DIR/$a/obj
-			ar -x $COMMON_BUILD_PATH/lib/$a/$NAME
+			ar -x $COMMON_BUILD_DIR/lib/$a/$NAME
 		done
 	done
 	echo "Linking each architecture into an uberlib ($ALL_LIBS => libboost.a )"
@@ -243,30 +229,30 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
 
 	for a in ${ARCHS[@]}; do
 		echo "...$a"
-		cd $COMMON_BUILD_PATH/lib/$a
+		cd $COMMON_BUILD_DIR/lib/$a
 		$ARM_DEV_CMD ar crus libboost.a $IOS_BUILD_DIR/$a/obj/*.o;
 	done
 
 	echo "Making fat lib for iOS Boost '$VERSION_STRING'"
 	
-	mkdir -p $COMMON_BUILD_PATH/lib/universal
+	mkdir -p $COMMON_BUILD_DIR/lib/universal
 	ARCH_LIBS=""
 	for a in ${ARCHS[@]}; do
-		ARCH_LIBS="$COMMON_BUILD_PATH/lib/$a/libboost.a $ARCH_LIBS"
+		ARCH_LIBS="$COMMON_BUILD_DIR/lib/$a/libboost.a $ARCH_LIBS"
 	done
-	lipo -c $ARCH_LIBS -output $COMMON_BUILD_PATH/lib/universal/libboost.a
-	rm -rf $IOS_BUILD_DIR
+	lipo -c $ARCH_LIBS -output $COMMON_BUILD_DIR/lib/universal/libboost.a
+	#rm -rf $IOS_BUILD_DIR
     done_section "fat lib"
 }
 #===============================================================================
 function copy_headers
 {
-	mkdir -p $COMMON_BUILD_PATH/include
+	mkdir -p $COMMON_BUILD_DIR/include
     echo "------------------"
-    echo "Copying Includes to Final Dir $COMMON_BUILD_PATH/include"
+    echo "Copying Includes to Final Dir $COMMON_BUILD_DIR/include"
     LOG="$LOG_DIR/buildIncludes.log"
     set +e
-    cp -r $PREFIXDIR/include/*  $COMMON_BUILD_PATH/include > "${LOG}" 2>&1
+    cp -r $PREFIX_DIR/include/*  $COMMON_BUILD_DIR/include > "${LOG}" 2>&1
     if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
         echo "Problem while copying includes - Please check ${LOG}"
@@ -284,7 +270,7 @@ function copy_headers
 echo "BOOST_VERSION:     $VERSION_STRING"
 echo "BOOST_LIBS:        $BOOST_LIBS"
 echo "Sources dir:       $SRC_DIR"
-echo "PREFIXDIR:         $PREFIXDIR"
+echo "PREFIX_DIR:         $PREFIX_DIR"
 echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
 echo "XCODE_ROOT:        $XCODE_ROOT"
 echo "COMPILER:          $COMPILER"
@@ -293,14 +279,15 @@ if [ -z ${BITCODE} ]; then
 else 
     echo "BITCODE EMBEDDED: YES with: $BITCODE"
 fi
+
 download_tarball
 unpack_tarball
 invent_missing_headers $SRC_DIR
-prepare
+create_paths
 bootstrapBoost
 updateBoost
 buildBoostForIPhoneOS
-scrunchAllLibsTogetherInOneLibPerPlatform
+package_libraries
 copy_headers
-postcleanEverything
+#cleanup
 echo "Completed successfully"
