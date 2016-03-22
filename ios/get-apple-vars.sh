@@ -2,6 +2,10 @@
 
 export XCODE_XCCONFIG_FILE=$SCRIPT_DIR/no-code-sign.xcconfig
 
+ARM_DEV_CMD="xcrun --sdk iphoneos"
+SIM_DEV_CMD="xcrun --sdk iphonesimulator"
+OSX_DEV_CMD="xcrun --sdk macosx"
+
 #IPHONE_SDKVERSION=`xcodebuild -showsdks | grep iphoneos | egrep "[[:digit:]]+\.[[:digit:]]+" -o | tail -1`
 IPHONE_SDKVERSION=`xcrun -sdk iphoneos --show-sdk-version`
 IPHONEOS_PLATFORM=`xcrun --sdk iphoneos --show-sdk-platform-path`
