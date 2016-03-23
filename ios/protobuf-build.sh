@@ -12,41 +12,22 @@
 # iPhone simulator. Then creates a pseudo-framework to make using protobuf in Xcode
 # less painful.
 #
-# To configure the script, define:
-#    IPHONE_SDKVERSION: iPhone SDK version (e.g. 8.0)
-#
 #===============================================================================
 
-source `dirname $0`/paths-config.sh
-source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/config.sh
 source `dirname $0`/helpers.sh
-
-CPPSTD=c++11    #c++89, c++99, c++14
-STDLIB=libc++   # libstdc++
-CC=clang
-CXX=clang++
-PARALLEL_MAKE=7   # how many threads to build
 
 LIB_NAME=protobuf
-REPO_URL=https://github.com/google/protobuf
 VERSION_STRING=v3.0.0-beta-2
-PROTOBUF_VERSION2=${VERSION_STRING//./_}
+REPO_URL=https://github.com/google/protobuf
 
-#BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
-
-BUILD_PATH=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
-IOS_MIN_VERSION=7.0
-
-# build parameters
-source `dirname $0`/paths-config.sh
-source `dirname $0`/get-apple-vars.sh
-source `dirname $0`/helpers.sh
+BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-SRC_FOLDER=$BUILD_PATH/src
-PLATFROM_FOLDER=$BUILD_PATH/platform
-LOG_DIR=$BUILD_PATH/logs
+SRC_DIR=$BUILD_DIR/src
+PLATFORM_DIR=$BUILD_DIR/platform
+LOG_DIR=$BUILD_DIR/logs
 
 #TARBALL_NAME=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING.tar.bz2
 
@@ -54,12 +35,7 @@ CFLAGS="-O3 -pipe -fPIC -fcxx-exceptions"
 CXXFLAGS="$CFLAGS -std=$CPPSTD -stdlib=$STDLIB $BITCODE"
 LIBS="-lc++ -lc++abi"
 
-ARM_DEV_CMD="xcrun --sdk iphoneos"
-SIM_DEV_CMD="xcrun --sdk iphonesimulator"
-OSX_DEV_CMD="xcrun --sdk macosx"
-
-ARCH_POSTFIX=darwin$OS_RELEASE
-PROTOC=${PLATFROM_FOLDER}/x86_64-mac/bin/protoc
+PROTOC=$COMMON_BUILD_DIR/bin/protoc
 
 # should be called with 2 parameters:
 # download_from_git <repo url> <repo name>
@@ -77,15 +53,6 @@ function download_from_git
 	done_section "downloading"
 }
 
-function invent_missing_headers
-{
-    # These files are missing in the ARM iPhoneOS SDK, but they are in the simulator.
-    # They are supported on the device, so we copy them from x86 SDK to a staging area
-    # to use them on ARM, too.
-    echo 'Creating missing headers...'
-    cp $XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $SRC_FOLDER
-}
-
 function create_paths
 {
     mkdir -p $LOG_DIR
@@ -94,34 +61,41 @@ function create_paths
 function cleanup
 {
 	echo 'Cleaning everything after the build...'
-	rm -rf $BUILD_PATH/platform
+	rm -rf $BUILD_DIR
 	rm -rf $LOG_DIR
 	done_section "cleanup"
 }
 
 function automake_run
 {
-	rm -rf $BUILD_PATH
-	cp -r $GIT_REPO_DIR $BUILD_PATH
+	rm -rf $BUILD_DIR
+	cp -r $GIT_REPO_DIR $BUILD_DIR
 	create_paths
-	cd $BUILD_PATH
+	cd $BUILD_DIR
 	./autogen.sh
-	cd $COMMON_BUILD_PATH
+	cd $COMMON_BUILD_DIR
 }
 
 function build_protoc
 {
-	cd $BUILD_PATH
+	if [ -f $PROTOC ]; then
+		return
+	fi
+
+	cd $BUILD_DIR
 	LOG="$LOG_DIR/build-macos.log"
 	[ -f Makefile ] && make distclean
-	./configure --disable-shared --prefix=${BUILD_PATH}/platform/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --disable-shared --prefix=${PLATFORM_DIR}/x86_64-mac "CC=${CC}" "CFLAGS=${CFLAGS} -arch x86_64" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} -arch x86_64" "LDFLAGS=${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while building protoc - Please check ${LOG}"
-        exit 1
-    fi
-    make install
+		tail -n 100 "${LOG}"
+		echo "Problem while building protoc - Please check ${LOG}"
+		exit 1
+	fi
+	make install
+    
+	mkdir -p $COMMON_BUILD_DIR/bin
+	cp -r $PLATFORM_DIR/x86_64-mac/bin/protoc $COMMON_BUILD_DIR/bin
 }
 
 # example:
@@ -130,7 +104,7 @@ function build_iphone
 {
 	local MIN_VERSION_FLAG="-miphoneos-version-min=${IOS_MIN_VERSION}"
 	local ARCH_FLAGS="-arch $1 -isysroot ${IPHONEOS_SYSROOT} $MIN_VERSION_FLAG"
-	cd $BUILD_PATH
+	cd $BUILD_DIR
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
 	HOST=$1
@@ -139,7 +113,7 @@ function build_iphone
 	else
 		HOST=$1-apple-${ARCH_POSTFIX}
 	fi
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/$1 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$HOST --with-protoc=${PROTOC} --disable-shared --prefix=${PLATFORM_DIR}/$1 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
@@ -153,11 +127,11 @@ function build_iphone
 function build_simulator
 {
 	local MIN_VERSION_FLAG="-mios-simulator-version-min=${IOS_MIN_VERSION}"
-	local ARCH_FLAGS="-arch x86_64 -isysroot ${IPHONESIMULATOR_SYSROOT} ${MIN_VERSION_FLAG}"
-	cd $BUILD_PATH
+	local ARCH_FLAGS="-arch $1 -isysroot ${IPHONESIMULATOR_SYSROOT} ${MIN_VERSION_FLAG}"
+	cd $BUILD_DIR
 	LOG="$LOG_DIR/build-$1.log"
 	[ -f Makefile ] && make distclean
-	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=x86_64-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${BUILD_PATH}/platform/x86_64 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch x86_64 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
+	./configure --build=x86_64-apple-${ARCH_POSTFIX} --host=$1-apple-${ARCH_POSTFIX} --with-protoc=${PROTOC} --disable-shared --prefix=${PLATFORM_DIR}/$1 "CC=${CC}" "CFLAGS=${CFLAGS} ${ARCH_FLAGS}" "CXX=${CXX}" "CXXFLAGS=${CXXFLAGS} ${ARCH_FLAGS}" LDFLAGS="-arch $1 $MIN_VERSION_FLAG ${LDFLAGS}" "LIBS=${LIBS}" > "${LOG}" 2>&1
 	make >> "${LOG}" 2>&1
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
@@ -170,7 +144,7 @@ function build_simulator
 
 function package_libraries
 {
-    cd $BUILD_PATH/platform
+    cd $PLATFORM_DIR
     mkdir -p universal/lib
     local FOLDERS=()
     if [ -d x86_64 ]; then FOLDERS+=('x86_64'); fi
@@ -194,17 +168,15 @@ function package_libraries
 # copy_to_sdk universal|armv7|armv7s|arm64|sim
 function copy_to_sdk
 {
-	cd $COMMON_BUILD_PATH
-	mkdir -p bin
+	cd $COMMON_BUILD_DIR
 	mkdir -p include
-	cp -r $BUILD_PATH/platform/x86_64-mac/bin/protoc bin
-	cp -r $BUILD_PATH/platform/x86_64-mac/include/* include
+	cp -r $PLATFORM_DIR/x86_64-mac/include/* include
 	
 	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64' 'universal')
 	for a in ${ARCHS[@]}; do
-		if [ -d $BUILD_PATH/platform/$a ]; then
+		if [ -d $PLATFORM_DIR/$a ]; then
 			mkdir -p lib/$a
-			cp -r $BUILD_PATH/platform/$a/lib/* lib/$a
+			cp -r $PLATFORM_DIR/$a/lib/* lib/$a
 			lipo -info lib/$a/libprotobuf.a
 			lipo -info lib/$a/libprotobuf-lite.a
 		fi
@@ -214,8 +186,8 @@ function copy_to_sdk
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $SRC_FOLDER"
-echo "Build dir:          $BUILD_PATH"
+echo "Sources dir:        $SRC_DIR"
+echo "Build dir:          $BUILD_DIR"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
 echo "C compiler:         $CC"
@@ -233,9 +205,9 @@ build_protoc
 build_iphone armv7
 build_iphone armv7s
 build_iphone arm64
-build_simulator
+build_simulator x86_64
 package_libraries
 copy_to_sdk
-cleanup
+#cleanup
 echo "Completed successfully"
 

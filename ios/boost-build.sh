@@ -18,23 +18,13 @@
 # Then run boost-build.sh from folder in which you want to see your build.
 #===============================================================================
 
-source `dirname $0`/paths-config.sh
-source `dirname $0`/get-apple-vars.sh
+source `dirname $0`/config.sh
 source `dirname $0`/helpers.sh
-
-CPPSTD=c++11    #c++89, c++99, c++14
-STDLIB=libc++   # libstdc++
-COMPILER=clang++
-PARALLEL_MAKE=7   # how many threads to make boost with
 
 LIB_NAME=boost
 VERSION_STRING=1.60.0
 BOOST_VERSION2=${VERSION_STRING//./_}
 TARBALL_URL=http://sourceforge.net/projects/boost/files/boost/${VERSION_STRING}/boost_${BOOST_VERSION2}.tar.bz2/download
-
-#BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
-
-IOS_MIN_VERSION=7.0
 
 BOOST_LIBS="random regex graph random chrono thread signals filesystem system date_time"
 
@@ -46,8 +36,7 @@ BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 LOG_DIR=$BUILD_DIR/logs/
 PREFIX_DIR=$BUILD_DIR/ios-prefix
 
-BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
-BOOST_INCLUDE=$SRC_DIR/$LIB_NAME
+TARBALL_FILE=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
 
 #===============================================================================
 # Functions
@@ -69,9 +58,9 @@ function create_paths
 function download_tarball
 {
 	mkdir -p $TARBALL_DIR
-	if [ ! -s $BOOST_TARBALL ]; then
+	if [ ! -s $TARBALL_FILE ]; then
 		echo "Downloading boost ${VERSION_STRING}"
-		curl -L -o $BOOST_TARBALL $TARBALL_URL
+		curl -L -o $TARBALL_FILE $TARBALL_URL
 	fi
 	done_section "download"
 }
@@ -84,10 +73,10 @@ function unpack_tarball
 	
 	mkdir -p $BUILD_DIR
 	cd $BUILD_DIR
-	[ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
+	[ -f "$TARBALL_FILE" ] || abort "Source tarball missing."
 	echo "Unpacking boost into '$SRC_DIR'..."
 	mkdir -p tmp && cd tmp
-	tar xfj $BOOST_TARBALL
+	tar xfj $TARBALL_FILE
 	if [ ! -d boost_${BOOST_VERSION2} ]; then
 		echo "can't find 'boost_${BOOST_VERSION2}' in the tarball"
 		cd ..
