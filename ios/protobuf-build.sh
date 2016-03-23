@@ -25,7 +25,6 @@ BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-SRC_DIR=$BUILD_DIR/src
 PLATFORM_DIR=$BUILD_DIR/platform
 LOG_DIR=$BUILD_DIR/logs
 
@@ -186,7 +185,7 @@ function copy_to_sdk
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $SRC_DIR"
+echo "Repository dir:     $GIT_REPO_DIR"
 echo "Build dir:          $BUILD_DIR"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
