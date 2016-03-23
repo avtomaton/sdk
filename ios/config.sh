@@ -2,7 +2,8 @@
 
 CPPSTD=c++11    #c++89, c++99, c++14
 STDLIB=libc++   # libstdc++
-COMPILER=clang++
+CC=clang
+CXX=clang++
 PARALLEL_MAKE=7   # how many threads to build
 
 #BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation

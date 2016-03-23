@@ -103,12 +103,12 @@ updateBoost()
 		cp $SRC_DIR/tools/build/example/user-config.jam $SRC_DIR/tools/build/example/user-config.jam.bk
 		cat >> $SRC_DIR/tools/build/example/user-config.jam <<EOF
 using darwin : ${IPHONE_SDKVERSION}~iphone
-: $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch armv7 -arch arm64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}" -I${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}/usr/include/
+: $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$CXX -arch armv7 -arch arm64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}" -I${CROSS_TOP_IOS}/SDKs/${CROSS_SDK_IOS}/usr/include/
 : <striper> <root>$XCODE_ROOT/Platforms/iPhoneOS.platform/Developer
 : <architecture>arm <target-os>iphone
 ;
 using darwin : ${IPHONE_SDKVERSION}~iphonesim
-: $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$COMPILER -arch i386 -arch x86_64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_SIM}/SDKs/${CROSS_SDK_SIM}" -I${CROSS_TOP_SIM}/SDKs/${CROSS_SDK_SIM}/usr/include/
+: $XCODE_ROOT/Toolchains/XcodeDefault.xctoolchain/usr/bin/$CXX -arch i386 -arch x86_64 $EXTRA_CPPFLAGS "-isysroot ${CROSS_TOP_SIM}/SDKs/${CROSS_SDK_SIM}" -I${CROSS_TOP_SIM}/SDKs/${CROSS_SDK_SIM}/usr/include/
 : <striper> <root>$XCODE_ROOT/Platforms/iPhoneSimulator.platform/Developer
 : <architecture>x86 <target-os>iphone
 ;
@@ -265,7 +265,7 @@ echo "Sources dir:        $SRC_DIR"
 echo "PREFIX_DIR:         $PREFIX_DIR"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "Xcode root:         $XCODE_ROOT"
-echo "Compiler:           $COMPILER"
+echo "Compiler:           $CXX"
 if [ -z ${BITCODE} ]; then
     echo "BITCODE EMBEDDED: NO $BITCODE"
 else 
