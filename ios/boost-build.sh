@@ -44,7 +44,7 @@ SRC_DIR=$COMMON_BUILD_DIR/src/$LIB_NAME-$VERSION_STRING
 BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 LOG_DIR=$BUILD_DIR/logs/
-PREFIX_DIR=$BUILD_DIR/build/ios/prefix
+PREFIX_DIR=$BUILD_DIR/ios-prefix
 
 BOOST_TARBALL=$TARBALL_DIR/boost_$BOOST_VERSION2.tar.bz2
 BOOST_INCLUDE=$SRC_DIR/$LIB_NAME
@@ -56,15 +56,13 @@ BOOST_INCLUDE=$SRC_DIR/$LIB_NAME
 function cleanup
 {
 	echo 'Cleaning everything after the build...'
-	cd $BUILD_DIR
-	rm -rf iphone-build iphonesim-build osx-build
-	rm -rf $PREFIX_DIR
-    rm -rf $LOG_DIR
+	rm -rf $BUILD_DIR
 	done_section "cleanup"
 }
 
 function create_paths
 {
+	mkdir -p $BUILD_DIR
     mkdir -p $LOG_DIR
 }
 
@@ -174,8 +172,8 @@ buildBoostForIPhoneOS()
     else 
         echo "iphone-build install successful"
     fi
-    doneSection
-    echo "------------------"
+    done_section "iOS build"
+
     LOG="$LOG_DIR/build-iphone-simulator-build.log"
     echo "Running bjam for iphone-sim-build "
     echo "To see status in realtime check:"
@@ -189,7 +187,7 @@ buildBoostForIPhoneOS()
     else 
         echo "iphone-simulator build successful"
     fi
-    done_section "iphone build"
+    done_section "iOS simulator build"
 }
 
 function package_libraries
@@ -246,7 +244,7 @@ function package_libraries
 		ARCH_LIBS="$COMMON_BUILD_DIR/lib/$a/libboost.a $ARCH_LIBS"
 	done
 	lipo -c $ARCH_LIBS -output $COMMON_BUILD_DIR/lib/universal/libboost.a
-	#rm -rf $IOS_BUILD_DIR
+	rm -rf $IOS_BUILD_DIR
     done_section "fat lib"
 }
 #===============================================================================
