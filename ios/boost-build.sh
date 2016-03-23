@@ -281,5 +281,5 @@ updateBoost
 buildBoostForIPhoneOS
 package_libraries
 copy_headers
-#cleanup
+cleanup
 echo "Completed successfully"
