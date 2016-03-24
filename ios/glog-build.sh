@@ -19,7 +19,7 @@ source $SCRIPT_DIR/config.sh
 source $SCRIPT_DIR/helpers.sh
 
 LIB_NAME=glog
-VERSION_STRING=v0.3.4
+VERSION_STRING=master
 REPO_URL=https://github.com/google/glog.git
 
 BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
