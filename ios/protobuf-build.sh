@@ -26,10 +26,8 @@ BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-PLATFORM_DIR=$BUILD_DIR/platform
 LOG_DIR=$BUILD_DIR/logs
-
-#TARBALL_NAME=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING.tar.bz2
+PLATFORM_DIR=$BUILD_DIR/platform
 
 CFLAGS="-O3 -pipe -fPIC -fcxx-exceptions"
 CXXFLAGS="$CFLAGS -std=$CPPSTD -stdlib=$STDLIB $BITCODE"
@@ -96,6 +94,8 @@ function build_protoc
     
 	mkdir -p $COMMON_BUILD_DIR/bin
 	cp -r $PLATFORM_DIR/x86_64-mac/bin/protoc $COMMON_BUILD_DIR/bin
+	mkdir -p $COMMON_BUILD_DIR/include
+	cp -r $PLATFORM_DIR/x86_64-mac/include/* $COMMON_BUILD_DIR/include
 }
 
 # example:
@@ -144,10 +144,6 @@ function build_simulator
 
 function package_libraries
 {
-	cd $COMMON_BUILD_DIR
-	mkdir -p include
-	cp -r $PLATFORM_DIR/x86_64-mac/include/* include
-
 	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
 	local TOOL_LIBS=('libprotobuf.a' 'libprotobuf-lite.a' 'libprotoc.a')
 	local ALL_LIBS=""
