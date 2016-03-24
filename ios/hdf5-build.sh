@@ -87,6 +87,7 @@ function cmake_prepare
 	create_paths
 	# create native build for using H5detect, H5make_libsettings
 	if [ -f $COMMON_BUILD_DIR/bin/H5detect ]; then
+		echo "Skipping binaries build (already exists)"
 		return
 	fi
 

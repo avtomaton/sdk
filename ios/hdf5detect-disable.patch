@@ -1,5 +1,5 @@
 --- src/CMakeLists.txt	2015-10-24 08:13:50.000000000 +0300
-+++ src/A.txt	2016-03-17 04:20:32.766328848 +0300
++++ src/CMakeLists.txt	2016-03-17 04:20:32.766328848 +0300
 @@ -610,32 +610,34 @@
  # Setup the H5Detect utility which generates H5Tinit with platform
  # specific type checks inside
