@@ -260,7 +260,7 @@ function copy_headers
 # Execution starts here
 #===============================================================================
 if [ -f $COMMON_BUILD_DIR/lib/universal/libboost.a ]; then
-	"Assuming $LIB_NAME exists"
+	echo "Assuming $LIB_NAME exists"
 	exit 0
 fi
 

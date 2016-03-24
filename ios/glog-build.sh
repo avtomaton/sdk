@@ -119,7 +119,7 @@ function package_libraries
 }
 
 if [ -f $COMMON_BUILD_DIR/lib/universal/libglog.a ]; then
-	"Assuming $LIB_NAME exists"
+	echo "Assuming $LIB_NAME exists"
 	exit 0
 fi
 
