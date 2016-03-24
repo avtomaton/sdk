@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source `dirname $0`/paths-config.sh
+source `dirname $0`/config.sh
 
 function abort
 {
