@@ -27,6 +27,7 @@ BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 LOG_DIR=$BUILD_DIR/logs
+SRC_DIR=$GIT_REPO_DIR
 
 # should be called with 2 parameters:
 # download_from_git <repo url> <repo name>
@@ -67,18 +68,20 @@ function build_iphone
 	rm -rf $BUILD_DIR/$1/*
 	create_paths
 	cd $BUILD_DIR/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $GIT_REPO_DIR
+	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
 	
-	# xcodebuild -list -project gflags.xcodeproj
+	# 
 	xcodebuild -target install -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
 	
 	if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while building $1 - Please check ${LOG}"
-        exit 1
-    fi
-    done_section "building $1"
-    
+		tail -n 100 "${LOG}"
+		echo "Problem while building $1 - Please check ${LOG}"
+		echo "Xcode project properties:"
+		xcodebuild -list -project gflags.xcodeproj
+		exit 1
+	fi
+	done_section "building $1"
+	
 	cd $COMMON_BUILD_DIR
 }
 
@@ -119,7 +122,8 @@ function package_libraries
 
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
-echo "Sources dir:        $GIT_REPO_DIR"
+echo "Repository:         $GIT_REPO_DIR"
+echo "Sources dir:        $SRC_DIR"
 echo "Build dir:          $BUILD_DIR"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
