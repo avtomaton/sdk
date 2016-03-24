@@ -26,12 +26,12 @@ fi
 
 CODE_SIGN='nocodesign'
 #CODE_SIGN=
-IOS_VER='9-2'
 
 export XCODE_XCCONFIG_FILE=$POLLY_DIR/scripts/NoCodeSign.xcconfig
 
 #IPHONE_SDKVERSION=`xcodebuild -showsdks | grep iphoneos | egrep "[[:digit:]]+\.[[:digit:]]+" -o | tail -1`
 IPHONE_SDKVERSION=`xcrun -sdk iphoneos --show-sdk-version`
+IOS_VER=${IPHONE_SDKVERSION//./-}
 IPHONEOS_PLATFORM=`xcrun --sdk iphoneos --show-sdk-platform-path`
 IPHONEOS_SYSROOT=`xcrun --sdk iphoneos --show-sdk-path`
 IPHONESIMULATOR_PLATFORM=`xcrun --sdk iphonesimulator --show-sdk-platform-path`
