@@ -7,54 +7,27 @@
 # License:   BSD 3-clause license
 #===============================================================================
 #
-# Builds a protobuf library for the iPhone.
+# Builds a glog library for the iPhone.
 # Creates a set of universal libraries that can be used on an iPhone and in the
-# iPhone simulator. Then creates a pseudo-framework to make using protobuf in Xcode
+# iPhone simulator. Then creates a pseudo-framework to make using glog in Xcode
 # less painful.
-#
-# To configure the script, define:
-#    IPHONE_SDKVERSION: iPhone SDK version (e.g. 8.0)
 #
 #===============================================================================
 
-# build parameters
 SCRIPT_DIR=`dirname $0`
-source $SCRIPT_DIR/paths-config.sh
-source $SCRIPT_DIR/get-apple-vars.sh
+source $SCRIPT_DIR/config.sh
 source $SCRIPT_DIR/helpers.sh
 
-CPPSTD=c++11    #c++89, c++99, c++14
-STDLIB=libc++   # libstdc++
-CC=clang
-CXX=clang++
-PARALLEL_MAKE=7   # how many threads to build
-
 LIB_NAME=glog
-REPO_URL=https://github.com/google/glog.git
 VERSION_STRING=v0.3.4
+REPO_URL=https://github.com/google/glog.git
 
-#BITCODE="-fembed-bitcode"  # Uncomment this line for Bitcode generation
-
-BUILD_PATH=$COMMON_BUILD_PATH/$LIB_NAME-$VERSION_STRING
-IOS_MIN_VERSION=7.0
+BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
+LOG_DIR=$BUILD_DIR/logs
 SRC_DIR=$GIT_REPO_DIR
-PLATFROM_FOLDER=$BUILD_PATH/platform
-LOG_DIR=$BUILD_PATH/logs
-
-#TARBALL_NAME=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING.tar.bz2
-
-CFLAGS="-O3 -pipe -fPIC -fcxx-exceptions"
-CXXFLAGS="$CFLAGS -std=$CPPSTD -stdlib=$STDLIB $BITCODE"
-LIBS="-lc++ -lc++abi"
-
-ARM_DEV_CMD="xcrun --sdk iphoneos"
-SIM_DEV_CMD="xcrun --sdk iphonesimulator"
-OSX_DEV_CMD="xcrun --sdk macosx"
-
-ARCH_POSTFIX=darwin$OS_RELEASE
 
 # should be called with 2 parameters:
 # download_from_git <repo url> <repo name>
@@ -80,7 +53,7 @@ function create_paths
 function cleanup
 {
 	echo 'Cleaning everything after the build...'
-	# rm -rf $BUILD_PATH
+	rm -rf $BUILD_DIR
 	rm -rf $LOG_DIR
 	done_section "cleanup"
 }
@@ -90,24 +63,25 @@ function cleanup
 function build_iphone
 {
 	LOG="$LOG_DIR/build-$1.log"
-	
-	mkdir -p $BUILD_PATH/$1
-	rm -rf $BUILD_PATH/$1/*
+
+	mkdir -p $BUILD_DIR/$1
+	rm -rf $BUILD_DIR/$1/*
 	create_paths
-	cd $BUILD_PATH/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake -DCMAKE_PREFIX_INSTALL=./install -G Xcode $SRC_DIR
-	
-	# xcodebuild -list -project google-glog.xcodeproj
+	cd $BUILD_DIR/$1
+	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
+
 	xcodebuild -target glog -configuration Release -project google-glog.xcodeproj > "${LOG}" 2>&1
 	
 	if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while building $1 - Please check ${LOG}"
-        exit 1
-    fi
-    done_section "building $1"
-    
-	cd $COMMON_BUILD_PATH
+		tail -n 100 "${LOG}"
+		echo "Problem while building $1 - Please check ${LOG}"
+		echo "Xcode project properties:"
+		xcodebuild -list -project google-glog.xcodeproj
+		exit 1
+	fi
+	done_section "building $1"
+
+	cd $COMMON_BUILD_DIR
 }
 
 function package_libraries
@@ -116,14 +90,14 @@ function package_libraries
 	local TOOL_LIBS=('libglog.a')
 	local ALL_LIBS=""
 	
-	cd $BUILD_PATH
+	cd $BUILD_DIR
 
 	# copy bin and includes
-	mkdir -p $COMMON_BUILD_PATH/include/glog
-	cp $SRC_DIR/src/glog/log_severity.h $COMMON_BUILD_PATH/include/glog
+	mkdir -p $COMMON_BUILD_DIR/include/glog
+	cp $SRC_DIR/src/glog/log_severity.h $COMMON_BUILD_DIR/include/glog
 	for a in ${ARCHS[@]}; do
-		if [ -d $BUILD_PATH/$a ]; then
-			cp -r $a/glog/* $COMMON_BUILD_PATH/include/glog
+		if [ -d $BUILD_DIR/$a ]; then
+			cp -r $a/glog/* $COMMON_BUILD_DIR/include/glog
 			break
 		fi
 	done
@@ -132,14 +106,14 @@ function package_libraries
 	for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do
-			if [ -d $BUILD_PATH/$a ]; then
-				mkdir -p $COMMON_BUILD_PATH/lib/$a
-				cp $a/Release-iphoneos/$ll $COMMON_BUILD_PATH/lib/$a
+			if [ -d $BUILD_DIR/$a ]; then
+				mkdir -p $COMMON_BUILD_DIR/lib/$a
+				cp $a/Release-iphoneos/$ll $COMMON_BUILD_DIR/lib/$a
 				ALL_LIBS="$ALL_LIBS $a/Release-iphoneos/$ll"
 			fi
 		done
-		lipo $ALL_LIBS -create -output $COMMON_BUILD_PATH/lib/universal/$ll
-		lipo -info $COMMON_BUILD_PATH/lib/universal/$ll
+		lipo $ALL_LIBS -create -output $COMMON_BUILD_DIR/lib/universal/$ll
+		lipo -info $COMMON_BUILD_DIR/lib/universal/$ll
 	done
 	done_section "packaging fat libs"
 }
@@ -148,7 +122,7 @@ echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
 echo "Repository:         $GIT_REPO_DIR"
 echo "Sources dir:        $SRC_DIR"
-echo "Build dir:          $BUILD_PATH"
+echo "Build dir:          $BUILD_DIR"
 echo "iPhone SDK version: $IPHONE_SDKVERSION"
 echo "XCode root:         $XCODE_ROOT"
 echo "C compiler:         $CC"
