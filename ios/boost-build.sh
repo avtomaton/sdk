@@ -237,7 +237,7 @@ function package_libraries
 	rm -rf $IOS_BUILD_DIR
     done_section "fat lib"
 }
-#===============================================================================
+
 function copy_headers
 {
 	mkdir -p $COMMON_BUILD_DIR/include
@@ -255,9 +255,15 @@ function copy_headers
     fi
     done_section "headers copy"
 }
+
 #===============================================================================
 # Execution starts here
 #===============================================================================
+if [ -f $COMMON_BUILD_DIR/lib/universal/libboost.a ]; then
+	"Assuming $LIB_NAME exists"
+	exit 0
+fi
+
 #cleanEverythingReadyToStart #may want to comment if repeatedly running during dev
 #restoreBoost
 echo "Boost version:      $VERSION_STRING"

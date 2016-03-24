@@ -176,6 +176,11 @@ function package_libraries
 	done_section "packaging fat libs"
 }
 
+if [ -f $COMMON_BUILD_DIR/lib/universal/libhdf5.a ]; then
+	"Assuming $LIB_NAME exists"
+	exit 0
+fi
+
 echo "Library:            $LIB_NAME"
 echo "Version:            $VERSION_STRING"
 echo "Sources dir:        $SRC_DIR"

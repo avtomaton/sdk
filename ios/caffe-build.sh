@@ -118,6 +118,12 @@ function package_libraries
 	done_section "packaging fat libs"
 }
 
+$SCRIPT_DIR/boost-build.sh
+$SCRIPT_DIR/potobuf-build.sh
+$SCRIPT_DIR/gflags-build.sh
+$SCRIPT_DIR/glog-build.sh
+$SCRIPT_DIR/hdf5-build.sh
+
 download_from_git $REPO_URL $GIT_REPO_DIR
 copy_sources
 patch_sources
