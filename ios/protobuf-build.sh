@@ -188,6 +188,6 @@ build_iphone armv7s
 build_iphone arm64
 build_simulator x86_64
 package_libraries
-#cleanup
+cleanup
 echo "Completed successfully"
 
