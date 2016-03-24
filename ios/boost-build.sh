@@ -135,7 +135,7 @@ buildBoostForIPhoneOS()
     
     set +e    
     echo "------------------"
-    LOG="$LOG_DIR/build-iphone-stage.log"
+    LOG="$LOG_DIR/boost-iphone-stage.log"
     echo "Running bjam for iphone-build stage"
     echo "To see status in realtime check:"
     echo " ${LOG}"
@@ -149,7 +149,7 @@ buildBoostForIPhoneOS()
         echo "iphone-build stage successful"
     fi
     echo "------------------"
-    LOG="$LOG_DIR/build-iphone-install.log"
+    LOG="$LOG_DIR/boost-iphone-install.log"
     echo "Running bjam for iphone-build install"
     echo "To see status in realtime check:"
     echo " ${LOG}"
@@ -164,7 +164,7 @@ buildBoostForIPhoneOS()
     fi
     done_section "iOS build"
 
-    LOG="$LOG_DIR/build-iphone-simulator-build.log"
+    LOG="$LOG_DIR/boost-iphone-simulator-build.log"
     echo "Running bjam for iphone-sim-build "
     echo "To see status in realtime check:"
     echo " ${LOG}"

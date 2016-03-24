@@ -62,7 +62,7 @@ function cleanup
 # cmake_run armv7|armv7s|arm64
 function build_iphone
 {
-	LOG="$LOG_DIR/build-$1.log"
+	LOG="$LOG_DIR/$LIB_NAME-build-$1.log"
 	
 	mkdir -p $BUILD_DIR/$1
 	rm -rf $BUILD_DIR/$1/*

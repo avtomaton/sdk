@@ -120,6 +120,8 @@ function patch_sources
 # cmake_run armv7|armv7s|arm64
 function build_iphone
 {
+	LOG="$LOG_DIR/$LIB_NAME-build-$1.log"
+
 	mkdir -p $BUILD_DIR/$1
 	rm -rf $BUILD_DIR/$1/*
 	create_paths
@@ -127,7 +129,14 @@ function build_iphone
 	cp $COMMON_BUILD_DIR/bin/H5detect $BUILD_DIR/$1
 	cp $COMMON_BUILD_DIR/bin/H5make_libsettings $BUILD_DIR/$1
 	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -DBUILD_TESTING=OFF -G Xcode $SRC_DIR
-	xcodebuild -target install -configuration Release -project HDF5.xcodeproj
+
+	xcodebuild -target install -configuration Release -project HDF5.xcodeproj > "${LOG}" 2>&1
+	if [ $? != 0 ]; then 
+        tail -n 100 "${LOG}"
+        echo "Problem while building $1 - Please check ${LOG}"
+        xcodebuild -list -project HDF5.xcodeproj
+        exit 1
+    fi
 	cd $COMMON_BUILD_DIR
 	done_section "building $1"
 }
