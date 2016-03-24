@@ -13,15 +13,20 @@ SIM_DEV_CMD="xcrun --sdk iphonesimulator"
 OSX_DEV_CMD="xcrun --sdk macosx"
 IOS_MIN_VERSION=7.0
 
+SCRIPT_DIR=`dirname $0`
 COMMON_BUILD_DIR=`pwd`
-case $COMMON_BUILD_DIR in  
-     *\ * )
-           echo "Your path contains whitespaces, which is not supported by 'make install'."
-           exit 1
-          ;;
-esac
 
 TARBALL_DIR=$COMMON_BUILD_DIR/downloads
+
+POLLY_DIR=$COMMON_BUILD_DIR/polly
+if [ ! -d $POLLY_DIR ]; then
+	cd $COMMON_BUILD_DIR
+	git clone https://github.com/ruslo/polly
+fi
+
+CODE_SIGN='nocodesign'
+#CODE_SIGN=
+IOS_VER='9-2'
 
 export XCODE_XCCONFIG_FILE=$SCRIPT_DIR/no-code-sign.xcconfig
 
@@ -35,6 +40,13 @@ OSX_SDKVERSION=`xcrun -sdk macosx --show-sdk-version`
 XCODE_ROOT=`xcode-select -print-path`
 OS_RELEASE=`uname -r`
 ARCH_POSTFIX=darwin$OS_RELEASE
+
+case $COMMON_BUILD_DIR in  
+     *\ * )
+           echo "Your path contains whitespaces, which is not supported by 'make install'."
+           exit 1
+          ;;
+esac
 
 if [ ! -d "$XCODE_ROOT" ]; then
   echo "xcode path is not set correctly set: '$XCODE_ROOT' does not exist (most likely because of xcode > 4.3)"
