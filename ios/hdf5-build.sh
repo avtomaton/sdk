@@ -96,6 +96,7 @@ function cmake_prepare
 	mkdir -p $COMMON_BUILD_DIR/bin
 	cp $BUILD_DIR/osx/bin/Release/H5detect $COMMON_BUILD_DIR/bin
 	cp $BUILD_DIR/osx/bin/Release/H5make_libsettings $COMMON_BUILD_DIR/bin
+	done_section "building hdf5 binaries"
 }
 
 function patch_sources
@@ -103,16 +104,16 @@ function patch_sources
 	# apply patch for
 	# disabling building H5Detect, H5make_libsettings
 	# arm binary will fail on host machine without this step
-	cd $SRC_DIR
+	cd $COMMON_BUILD_DIR
 	if [ ! -f src/CMakeLists.txt.bak ]; then
-		cp src/CMakeLists.txt src/CmakeLists.txt.bak
-		cp src/H5private.h src/H5private.h.bak
-		cp src/H5FDstdio.c src/H5FDstdio.c.bak
-		patch src/CMakeLists.txt $SCRIPT_DIR/hdf5detect-disable.patch
-		patch src/H5private.h $SCRIPT_DIR/hdf5-h5private.patch
-		patch src/H5FDstdio.c $SCRIPT_DIR/hdf5-h5fdstdio.patch
+		cp $SRC_DIR/src/CMakeLists.txt $SRC_DIR/src/CmakeLists.txt.bak
+		cp $SRC_DIR/src/H5private.h $SRC_DIR/src/H5private.h.bak
+		cp $SRC_DIR/src/H5FDstdio.c $SRC_DIR/src/H5FDstdio.c.bak
+		patch $SRC_DIR/src/CMakeLists.txt $SCRIPT_DIR/hdf5detect-disable.patch
+		patch $SRC_DIR/src/H5private.h $SCRIPT_DIR/hdf5-h5private.patch
+		patch $SRC_DIR/src/H5FDstdio.c $SCRIPT_DIR/hdf5-h5fdstdio.patch
 	fi
-	cd $BUILD_DIR
+	done_section "patching sources"
 }
 
 # example:
