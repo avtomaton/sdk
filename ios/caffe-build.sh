@@ -68,7 +68,7 @@ function build_iphone
 	rm -rf $BUILD_DIR/$1/*
 	create_paths
 	cd $BUILD_DIR/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake DCMAKE_INSTALL_PREFIX=./install -DCPU_ONLY=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_python=OFF -DBUILD_python_layer=OFF -DBUILD_docs=OFF -DUSE_OPENCV=OFF -DUSE_LEVELDB=OFF -DUSE_LMDB=OFF -DPROTOC=$COMMON_BUILD_DIR/bin/protoc -DCMAKE_CXX_FLAGS="-I$COMMON_BUILD_DIR/include -I$COMMON_BUILD_DIR/include/hdf5 -I/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Headers" -DCMAKE_EXE_LINKER_FLAGS-L$COMMON_BUILD_DIR/lib/$1 -G Xcode $SRC_DIR
+	cmake -DCMAKE_TOOLCHAIN_FILE=$SCRIPT_DIR/ios-$1.cmake DCMAKE_INSTALL_PREFIX=./install -DCPU_ONLY=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_python=OFF -DBUILD_python_layer=OFF -DBUILD_docs=OFF -DUSE_OPENCV=OFF -DUSE_LEVELDB=OFF -DUSE_LMDB=OFF -DPROTOC=$COMMON_BUILD_DIR/bin/protoc -DCMAKE_CXX_FLAGS="-I$COMMON_BUILD_DIR/include -I$COMMON_BUILD_DIR/include/hdf5 -I/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Headers" -DCMAKE_EXE_LINKER_FLAGS=-L$COMMON_BUILD_DIR/lib/$1 -G Xcode $SRC_DIR
 	
 	xcodebuild -target install -configuration Release -project Caffe.xcodeproj > "${LOG}" 2>&1
 	
