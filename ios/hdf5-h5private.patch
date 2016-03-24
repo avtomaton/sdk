@@ -1,10 +1,11 @@
 --- src/H5private.h	2016-03-18 03:13:11.923824170 +0300
 +++ src/H5private.h	2016-03-18 03:07:28.983796000 +0300
-@@ -523,6 +523,8 @@
+@@ -523,6 +523,9 @@
  #define H5_TB (1024.0F * 1024.0F * 1024.0F * 1024.0F)
  #define H5_EB (1024.0F * 1024.0F * 1024.0F * 1024.0F * 1024.0F)
  
 +int vasprintf(char **strp, const char *fmt, va_list app);
++int snprintf(char *, unsigned long, const char *, ...);
 +
  /*
   * Data types and functions for timing certain parts of the library.
