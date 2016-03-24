@@ -67,7 +67,7 @@ function build_iphone
 	rm -rf $BUILD_DIR/$1/*
 	create_paths
 	cd $BUILD_DIR/$1
-	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_PREFIX_INSTALL=./install -G Xcode $GIT_REPO_DIR
+	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $GIT_REPO_DIR
 	
 	# xcodebuild -list -project gflags.xcodeproj
 	xcodebuild -target install -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
@@ -133,7 +133,7 @@ fi
 
 download_from_git $REPO_URL $GIT_REPO_DIR
 build_iphone armv7
-build_iphone armv64
+build_iphone arm64
 package_libraries
 cleanup
 echo "Completed successfully"
