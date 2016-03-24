@@ -26,8 +26,8 @@ BUILD_DIR=$COMMON_BUILD_DIR/build/$LIB_NAME-$VERSION_STRING
 
 # paths
 GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
-LOG_DIR=$BUILD_DIR/logs
 SRC_DIR=$GIT_REPO_DIR
+LOG_DIR=$BUILD_DIR/logs
 
 # should be called with 2 parameters:
 # download_from_git <repo url> <repo name>
