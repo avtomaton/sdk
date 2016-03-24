@@ -135,7 +135,7 @@ fi
 
 download_from_git $REPO_URL $GIT_REPO_DIR
 build_iphone armv7
-build_iphone armv64
+build_iphone arm64
 package_libraries
 cleanup
 echo "Completed successfully"
