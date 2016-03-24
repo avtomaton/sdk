@@ -49,11 +49,11 @@ function patch_sources
 	# apply patch for
 	# disabling cmake find_package functions family
 	cd $COMMON_BUILD_DIR
-	if [ ! -f $SCR_DIR/cmake/Dependencies.cmake.bak ]; then
-		cp $SCR_DIR/cmake/Dependencies.cmake $SCR_DIR/cmake/Dependencies.cmake.bak
-		cp $SCR_DIR/cmake/Protobuf.cmake $SCR_DIR/cmake/Protobuf.cmake.bak
-		patch $SCR_DIR/cmake/Dependencies.cmake $SCRIPT_DIR/caffe-deps.patch
-		patch $SCR_DIR/cmake/Protobuf.cmake $SCRIPT_DIR/caffe-pb.patch
+	if [ ! -f $SRC_DIR/cmake/Dependencies.cmake.bak ]; then
+		cp $SRC_DIR/cmake/Dependencies.cmake $SRC_DIR/cmake/Dependencies.cmake.bak
+		cp $SRC_DIR/cmake/Protobuf.cmake $SRC_DIR/cmake/Protobuf.cmake.bak
+		patch $SRC_DIR/cmake/Dependencies.cmake $SCRIPT_DIR/caffe-deps.patch
+		patch $SRC_DIR/cmake/Protobuf.cmake $SCRIPT_DIR/caffe-pb.patch
 	fi
 	cd $BUILD_DIR
 }
