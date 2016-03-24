@@ -34,7 +34,7 @@ function download_from_git
 function copy_sources
 {
 	rm -rf $SRC_DIR
-	cp -av $GIT_REPO_DIR $SRC_DIR
+	cp -a $GIT_REPO_DIR $SRC_DIR
 	rm -rf $SRC_DIR/.git
 	rm -rf $SRC_DIR/.gitignore
 }
