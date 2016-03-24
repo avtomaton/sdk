@@ -149,7 +149,7 @@ function build_iphone
 function package_libraries
 {
 	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
-	local TOOL_LIBS=('libhdf5_cpp.a' 'libhdf5_hl_cpp.a' 'libndf5.a' 'libhdf5_hl.a')
+	local TOOL_LIBS=('libhdf5_cpp.a' 'libhdf5_hl_cpp.a' 'libhdf5.a' 'libhdf5_hl.a')
 	local ALL_LIBS=""
 
 	cd $BUILD_DIR
