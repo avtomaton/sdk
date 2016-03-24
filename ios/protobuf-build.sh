@@ -143,44 +143,29 @@ function build_simulator
 
 function package_libraries
 {
-    cd $PLATFORM_DIR
-    mkdir -p universal/lib
-    local FOLDERS=()
-    if [ -d x86_64 ]; then FOLDERS+=('x86_64'); fi
-    if [ -d i386 ]; then FOLDERS+=('i386'); fi
-    if [ -d arm64 ]; then FOLDERS+=('arm64'); fi
-    if [ -d armv7 ]; then FOLDERS+=('armv7'); fi
-    if [ -d armv7s ]; then FOLDERS+=('armv7s'); fi
-    local ALL_LIBS=''
-    for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf.a"
-	done
-    lipo $ALL_LIBS -create -output universal/lib/libprotobuf.a
-    ALL_LIBS=''
-    for i in ${FOLDERS[@]}; do
-		ALL_LIBS="$ALL_LIBS $i/lib/libprotobuf-lite.a"
-	done
-    lipo $ALL_LIBS -create -output universal/lib/libprotobuf-lite.a
-    done_section "packaging fat lib"
-}
-
-# copy_to_sdk universal|armv7|armv7s|arm64|sim
-function copy_to_sdk
-{
 	cd $COMMON_BUILD_DIR
 	mkdir -p include
 	cp -r $PLATFORM_DIR/x86_64-mac/include/* include
-	
-	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64' 'universal')
-	for a in ${ARCHS[@]}; do
-		if [ -d $PLATFORM_DIR/$a ]; then
-			mkdir -p lib/$a
-			cp -r $PLATFORM_DIR/$a/lib/* lib/$a
-			lipo -info lib/$a/libprotobuf.a
-			lipo -info lib/$a/libprotobuf-lite.a
-		fi
+
+	local ARCHS=('armv7' 'armv7s' 'arm64' 'i386' 'x86_64')
+	local TOOL_LIBS=('libprotobuf.a' 'libprotobuf-lite.a' 'libprotoc.a')
+	local ALL_LIBS=""
+
+	mkdir -p $COMMON_BUILD_DIR/lib/universal/lib
+	cd $PLATFORM_DIR
+	for ll in ${TOOL_LIBS[@]}; do
+		ALL_LIBS=""
+		for a in ${ARCHS[@]}; do
+			if [ -d $a ]; then
+				mkdir -p $COMMON_BUILD_DIR/lib/$a
+				cp $a/lib/$ll $COMMON_BUILD_DIR/lib/$a
+				ALL_LIBS="$ALL_LIBS $a/lib/$ll"
+			fi
+		done
+		lipo $ALL_LIBS -create -output $COMMON_BUILD_DIR/lib/universal/$ll
+		lipo -info $COMMON_BUILD_DIR/lib/universal/$ll
 	done
-	done_section "copying into sdk"
+    done_section "packaging fat libs"
 }
 
 echo "Library:            $LIB_NAME"
@@ -206,7 +191,6 @@ build_iphone armv7s
 build_iphone arm64
 build_simulator x86_64
 package_libraries
-copy_to_sdk
 #cleanup
 echo "Completed successfully"
 
