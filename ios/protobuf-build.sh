@@ -14,8 +14,9 @@
 #
 #===============================================================================
 
-source `dirname $0`/config.sh
-source `dirname $0`/helpers.sh
+SCRIPT_DIR=`dirname $0`
+source $SCRIPT_DIR/config.sh
+source $SCRIPT_DIR/helpers.sh
 
 LIB_NAME=protobuf
 VERSION_STRING=v3.0.0-beta-2

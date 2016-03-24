@@ -18,8 +18,9 @@
 # Then run boost-build.sh from folder in which you want to see your build.
 #===============================================================================
 
-source `dirname $0`/config.sh
-source `dirname $0`/helpers.sh
+SCRIPT_DIR=`dirname $0`
+source $SCRIPT_DIR/config.sh
+source $SCRIPT_DIR/helpers.sh
 
 LIB_NAME=boost
 VERSION_STRING=1.60.0
