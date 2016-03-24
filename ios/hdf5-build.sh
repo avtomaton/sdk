@@ -80,13 +80,17 @@ function cleanup
 function cmake_prepare
 {
 	mkdir -p $BUILD_DIR/osx
-	mv $SRC_DIR/examples $SRC_DIR/examples-bak
-	mv $SRC_DIR/test $SRC_DIR/test-bak
-	mv $SRC_DIR/tools $SRC_DIR/tools-bak
+	[ -d $SRC_DIR/examples ] && mv $SRC_DIR/examples $SRC_DIR/examples-bak
+	[ -d $SRC_DIR/test ] && mv $SRC_DIR/test $SRC_DIR/test-bak
+	[ -d $SRC_DIR/tools ] && mv $SRC_DIR/tools $SRC_DIR/tools-bak
 	
-	# create native build for using H5detect, H5make_libsettings
-	rm -rf $BUILD_DIR/osx/*
 	create_paths
+	# create native build for using H5detect, H5make_libsettings
+	if [ -f $COMMON_BUILD_DIR/bin/H5detect ]; then
+		return
+	fi
+
+	rm -rf $BUILD_DIR/osx/*
 	cd $BUILD_DIR/osx
 	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
 	# xcodebuild -list -project HDF5.xcodeproj
