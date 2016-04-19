@@ -130,54 +130,58 @@ function bootstrap_boost
 function build_iphone_boost
 {
 	mkdir -p $BUILD_DIR
-    cd $SRC_DIR
-    # Install this one so we can copy the includes for the frameworks...
-    
-    set +e    
-    echo "------------------"
-    LOG="$LOG_DIR/boost-iphone-stage.log"
-    echo "Running bjam for iphone-build stage"
-    echo "To see status in realtime check:"
-    echo " ${LOG}"
-    echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
-    if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while Building iphone-build stage - Please check ${LOG}"
-        exit 1
-    else 
-        echo "iphone-build stage successful"
-    fi
-    echo "------------------"
-    LOG="$LOG_DIR/boost-iphone-install.log"
-    echo "Running bjam for iphone-build install"
-    echo "To see status in realtime check:"
-    echo " ${LOG}"
-    echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
-    if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while Building iphone-build install - Please check ${LOG}"
-        exit 1
-    else 
-        echo "iphone-build install successful"
-    fi
-    done_section "iOS build"
+	cd $SRC_DIR
+	# Install this one so we can copy the includes for the frameworks...
 
-    LOG="$LOG_DIR/boost-iphone-simulator-build.log"
-    echo "Running bjam for iphone-sim-build "
-    echo "To see status in realtime check:"
-    echo " ${LOG}"
-    echo "Please stand by..."
-    ./bjam -j${PARALLEL_MAKE} --build-dir=iphonesim-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphonesim-build/stage --toolset=darwin-${IPHONE_SDKVERSION}~iphonesim architecture=x86 target-os=iphone variant=release cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage > "${LOG}" 2>&1
-    if [ $? != 0 ]; then 
-        tail -n 100 "${LOG}"
-        echo "Problem while Building iphone-simulator build - Please check ${LOG}"
-        exit 1
-    else 
-        echo "iphone-simulator build successful"
-    fi
-    done_section "iOS simulator build"
+	set +e    
+	echo "------------------"
+	LOG="$LOG_DIR/boost-iphone-stage.log"
+	echo "Running bjam for iphone-build stage"
+	echo "To see status in realtime check:"
+	echo " ${LOG}"
+	echo "Please stand by..."
+	./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static stage > "${LOG}" 2>&1
+	if [ $? != 0 ]; then 
+		tail -n 100 "${LOG}"
+		echo "Problem while Building iphone-build stage - Please check ${LOG}"
+		exit 1
+	else 
+		echo "iphone-build stage successful"
+	fi
+	echo "------------------"
+	LOG="$LOG_DIR/boost-iphone-install.log"
+	echo "Running bjam for iphone-build install"
+	echo "To see status in realtime check:"
+	echo " ${LOG}"
+	echo "Please stand by..."
+	./bjam -j${PARALLEL_MAKE} --build-dir=iphone-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphone-build/stage --prefix=$PREFIX_DIR --toolset=darwin-${IPHONE_SDKVERSION}~iphone cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" variant=release linkflags="-stdlib=$STDLIB" architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install > "${LOG}" 2>&1
+	if [ $? != 0 ]; then 
+		tail -n 100 "${LOG}"
+		echo "Problem while Building iphone-build install - Please check ${LOG}"
+		exit 1
+	else 
+		echo "iphone-build install successful"
+	fi
+	done_section "iOS build"
+}
+
+function build_sim_boost
+{
+	cd $SRC_DIR
+	LOG="$LOG_DIR/boost-iphone-simulator-build.log"
+	echo "Running bjam for iphone-sim-build "
+	echo "To see status in realtime check:"
+	echo " ${LOG}"
+	echo "Please stand by..."
+	./bjam -j${PARALLEL_MAKE} --build-dir=iphonesim-build -sBOOST_BUILD_USER_CONFIG=$SRC_DIR/tools/build/example/user-config.jam --stagedir=iphonesim-build/stage --toolset=darwin-${IPHONE_SDKVERSION}~iphonesim architecture=x86 target-os=iphone variant=release cxxflags="-miphoneos-version-min=$IOS_MIN_VERSION -stdlib=$STDLIB $BITCODE" macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage > "${LOG}" 2>&1
+	if [ $? != 0 ]; then 
+		tail -n 100 "${LOG}"
+		echo "Problem while Building iphone-simulator build - Please check ${LOG}"
+		exit 1
+	else 
+		echo "iphone-simulator build successful"
+	fi
+	done_section "iOS simulator build"
 }
 
 function package_libraries
@@ -286,6 +290,7 @@ create_paths
 bootstrap_boost
 update_boost
 build_iphone_boost
+build_sim_boost
 package_libraries
 copy_headers
 cleanup
