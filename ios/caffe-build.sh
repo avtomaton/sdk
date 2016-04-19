@@ -15,22 +15,6 @@ GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME
 SRC_DIR=$COMMON_BUILD_DIR/src/$LIB_NAME-$VERSION_STRING
 LOG_DIR=$BUILD_DIR/logs
 
-# should be called with 2 parameters:
-# download_from_git <repo url> <repo name>
-function download_from_git
-{
-	cd $TARBALL_DIR
-	if [ ! -d $2 ]; then
-		git clone $1 `basename $2`
-	else
-		cd $2
-		git pull
-	fi
-	cd $2
-	git checkout $VERSION_STRING
-	done_section "downloading"
-}
-
 function copy_sources
 {
 	rm -rf $SRC_DIR
@@ -124,7 +108,7 @@ $SCRIPT_DIR/gflags-build.sh
 $SCRIPT_DIR/glog-build.sh
 $SCRIPT_DIR/hdf5-build.sh
 
-download_from_git $REPO_URL $GIT_REPO_DIR
+download_from_git $REPO_URL $GIT_REPO_DIR $VERSION_STRING
 copy_sources
 patch_sources
 build_iphone armv7

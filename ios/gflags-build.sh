@@ -29,22 +29,6 @@ GIT_REPO_DIR=$TARBALL_DIR/$LIB_NAME-$VERSION_STRING
 LOG_DIR=$BUILD_DIR/logs
 SRC_DIR=$GIT_REPO_DIR
 
-# should be called with 2 parameters:
-# download_from_git <repo url> <repo name>
-function download_from_git
-{
-	cd $TARBALL_DIR
-	if [ ! -d $2 ]; then
-		git clone $1 `basename $2`
-	else
-		cd $2
-		git pull
-	fi
-	cd $2
-	git checkout $VERSION_STRING
-	done_section "downloading"
-}
-
 function create_paths
 {
     mkdir -p $LOG_DIR
@@ -105,6 +89,7 @@ function package_libraries
 	done
     
     # copy arch libs and create fat lib
+    mkdir -p $COMMON_BUILD_DIR/lib/universal
     for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do
@@ -140,7 +125,7 @@ else
     echo "BITCODE EMBEDDED: YES with: $BITCODE"
 fi
 
-download_from_git $REPO_URL $GIT_REPO_DIR
+download_from_git $REPO_URL $GIT_REPO_DIR $VERSION_STRING
 build_iphone armv7
 build_iphone arm64
 package_libraries

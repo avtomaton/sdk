@@ -19,6 +19,25 @@ function done_section
 	cd $COMMON_BUILD_PATH
 }
 
+# should be called with 2 parameters:
+# download_from_git <repo url> <repo path> [<branch|tag>]
+function download_from_git
+{
+	parent_folder=`dirname $2`
+	mkdir -p $parent_folder
+	cd $parent_folder
+	if [ ! -d $2 ]; then
+		git clone $1 `basename $2`
+	else
+		cd $2
+		git checkout master
+		git pull
+	fi
+	cd $2
+	[ $# -gt 2 ] && git checkout $3
+	done_section "downloading"
+}
+
 function download_cmake_ios_toolchain
 {
 	if [ ! -f $TARBALL_DIR/ios-cmake.tar.gz ]; then
