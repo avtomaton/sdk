@@ -132,7 +132,7 @@ function package_libraries
 	local TOOL_LIBS=('libprotobuf.a' 'libprotobuf-lite.a' 'libprotoc.a')
 	local ALL_LIBS=""
 
-	mkdir -p $COMMON_BUILD_DIR/lib/universal/lib
+	mkdir -p $COMMON_BUILD_DIR/lib/universal
 	cd $PLATFORM_DIR
 	for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""

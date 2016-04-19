@@ -54,7 +54,7 @@ function build_iphone
 	cd $BUILD_DIR/$1
 	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake DCMAKE_INSTALL_PREFIX=./install -DCPU_ONLY=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_python=OFF -DBUILD_python_layer=OFF -DBUILD_docs=OFF -DUSE_OPENCV=OFF -DUSE_LEVELDB=OFF -DUSE_LMDB=OFF -DPROTOC=$COMMON_BUILD_DIR/bin/protoc -DCMAKE_CXX_FLAGS="-I$COMMON_BUILD_DIR/include -I$COMMON_BUILD_DIR/include/hdf5 -I/System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Headers" -DCMAKE_EXE_LINKER_FLAGS=-L$COMMON_BUILD_DIR/lib/$1 -G Xcode $SRC_DIR
 	
-	xcodebuild -target install -configuration Release -project Caffe.xcodeproj > "${LOG}" 2>&1
+	xcodebuild -target install -configuration Release -project Caffe.xcodeproj IPHONEOS_DEPLOYMENT_TARGET="$IOS_MIN_VERSION" > "${LOG}" 2>&1
 	
 	if [ $? != 0 ]; then 
         tail -n 100 "${LOG}"
@@ -87,6 +87,7 @@ function package_libraries
 	done
 	
 	# copy arch libs and create fat lib
+	mkdir -p $COMMON_BUILD_DIR/lib/universal
 	for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do

@@ -11,7 +11,7 @@ PARALLEL_MAKE=7   # how many threads to build
 ARM_DEV_CMD="xcrun --sdk iphoneos"
 SIM_DEV_CMD="xcrun --sdk iphonesimulator"
 OSX_DEV_CMD="xcrun --sdk macosx"
-IOS_MIN_VERSION=7.0
+IOS_MIN_VERSION=8.0
 
 SCRIPT_DIR=`dirname $0`
 COMMON_BUILD_DIR=`pwd`

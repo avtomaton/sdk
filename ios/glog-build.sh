@@ -54,7 +54,7 @@ function build_iphone
 	cd $BUILD_DIR/$1
 	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
 
-	xcodebuild -target glog -configuration Release -project google-glog.xcodeproj > "${LOG}" 2>&1
+	xcodebuild -target glog -configuration Release -project google-glog.xcodeproj IPHONEOS_DEPLOYMENT_TARGET="$IOS_MIN_VERSION" > "${LOG}" 2>&1
 	
 	if [ $? != 0 ]; then 
 		tail -n 100 "${LOG}"
@@ -87,6 +87,7 @@ function package_libraries
 	done
 	
 	# copy arch libs and create fat lib
+	mkdir -p $COMMON_BUILD_DIR/lib/universal
 	for ll in ${TOOL_LIBS[@]}; do
 		ALL_LIBS=""
 		for a in ${ARCHS[@]}; do

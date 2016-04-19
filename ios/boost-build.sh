@@ -92,7 +92,7 @@ function unpack_tarball
 	done_section "unpack"
 }
 
-updateBoost()
+function update_boost
 {
     echo "Updating boost into '$SRC_DIR'..."
     local CROSS_TOP_IOS="${XCODE_ROOT}/Platforms/iPhoneOS.platform/Developer"
@@ -118,7 +118,7 @@ EOF
     done_section "update"
 }
 
-bootstrapBoost()
+function bootstrap_boost
 {
     cd $SRC_DIR
     BOOST_LIBS_COMMA=$(echo $BOOST_LIBS | sed -e "s/ /,/g")
@@ -127,7 +127,7 @@ bootstrapBoost()
     done_section "bootstrapping"
 }
 
-buildBoostForIPhoneOS()
+function build_iphone_boost
 {
 	mkdir -p $BUILD_DIR
     cd $SRC_DIR
@@ -283,9 +283,9 @@ download_tarball
 unpack_tarball
 invent_missing_headers $SRC_DIR
 create_paths
-bootstrapBoost
-updateBoost
-buildBoostForIPhoneOS
+bootstrap_boost
+update_boost
+build_iphone_boost
 package_libraries
 copy_headers
 cleanup

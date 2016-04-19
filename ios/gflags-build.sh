@@ -55,7 +55,7 @@ function build_iphone
 	cmake -DCMAKE_TOOLCHAIN_FILE=$POLLY_DIR/ios-$CODE_SIGN-$IOS_VER-$1.cmake -DCMAKE_INSTALL_PREFIX=./install -G Xcode $SRC_DIR
 	
 	# 
-	xcodebuild -target install -configuration Release -project gflags.xcodeproj > "${LOG}" 2>&1
+	xcodebuild -target install -configuration Release -project gflags.xcodeproj IPHONEOS_DEPLOYMENT_TARGET="$IOS_MIN_VERSION" > "${LOG}" 2>&1
 	
 	if [ $? != 0 ]; then 
 		tail -n 100 "${LOG}"
